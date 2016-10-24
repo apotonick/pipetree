@@ -20,4 +20,10 @@ class AlteringTest < Minitest::Spec
 
   it { Pipetree[A,B].insert!(C, after: A).inspect(",").must_equal %{ 0) A, 1) C, 2) B} }
   it { Pipetree[A,B].insert!(C, after: B).inspect(",").must_equal %{ 0) A, 1) B, 2) C} }
+
+  it { Pipetree[A,B].insert!(C, append: true).inspect(",").must_equal %{ 0) A, 1) B, 2) C} }
+  it { Pipetree[].insert!(C, append: true).inspect(",").must_equal %{ 0) C} }
+
+  it { Pipetree[A,B].insert!(C, prepend: true).inspect(",").must_equal %{ 0) C, 1) A, 2) B} }
+  it { Pipetree[].insert!(C, prepend: true).inspect(",").must_equal %{ 0) C} }
 end
