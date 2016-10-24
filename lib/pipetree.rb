@@ -19,7 +19,7 @@ class Pipetree < Array
   # TODO: implement for nested
   # TODO: remove in Representable::Debug.
   def inspect(separator="\n")
-    each_with_index.collect do |func, i|
+    string = each_with_index.collect do |func, i|
       name = File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+(\w+)/)[1]
 
       index = sprintf("%2d", i)
@@ -27,6 +27,9 @@ class Pipetree < Array
       # name  = sprintf("%-60.300s", name) # no idea what i'm doing here.
       # "#{index}) #{name} #{func.source_location.join(":")}"
     end.join(separator)
+
+    return string if separator == "," #FIXME
+    "\n#{string}"
   end
 
 private

@@ -10,7 +10,8 @@ class InspectTest < Minitest::Spec
     puts pipe.inspect
 
 
-    pipe.inspect.must_equal %{ 0) Beta
+    pipe.inspect.must_equal %{
+ 0) Beta
  1) AlphaConstant
  2) Beta
  3) AlphaConstant
