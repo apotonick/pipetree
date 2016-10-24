@@ -20,7 +20,7 @@ class Pipetree < Array
   # TODO: remove in Representable::Debug.
   def inspect(separator="\n")
     string = each_with_index.collect do |func, i|
-      name = File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+(\w+)/)[1]
+      name = File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]
 
       index = sprintf("%2d", i)
       "#{index}) #{name}"
