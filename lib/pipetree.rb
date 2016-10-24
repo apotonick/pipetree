@@ -16,27 +16,13 @@ class Pipetree < Array
     end
   end
 
-  # TODO: implement for nested
-  # TODO: remove in Representable::Debug.
-  def inspect(separator="\n")
-    string = each_with_index.collect do |func, i|
-      name = File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]
-
-      index = sprintf("%2d", i)
-      "#{index}) #{name}"
-      # name  = sprintf("%-60.300s", name) # no idea what i'm doing here.
-      # "#{index}) #{name} #{func.source_location.join(":")}"
-    end.join(separator)
-
-    return string if separator == "," #FIXME
-    "\n#{string}"
-  end
-
 private
   def evaluate(block, input, options)
     block.call(input, options)
   end
 
+  require "pipetree/inspect"
+  include Inspect
 
   module Macros # TODO: explicit test.
     # Macro to quickly modify an array of functions via Pipeline::Insert and return a

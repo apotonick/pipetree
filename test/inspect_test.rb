@@ -11,22 +11,23 @@ class InspectTest < Minitest::Spec
 
   it do
     puts pipe.inspect
+    puts pipe.inspect(style: :rows)
 
 
-    pipe.inspect.must_equal %{
- 0) M::Beta
- 1) M::AlphaConstant
- 2) M::Beta
- 3) M::AlphaConstant
- 4) M::Beta
- 5) M::AlphaConstant
- 6) M::Beta
- 7) M::AlphaConstant
- 8) M::Beta
- 9) M::AlphaConstant
-10) M::Beta}
+    pipe.inspect(style: :rows).must_equal %{
+ 0|>M::Beta
+ 1|>M::AlphaConstant
+ 2|>M::Beta
+ 3|>M::AlphaConstant
+ 4|>M::Beta
+ 5|>M::AlphaConstant
+ 6|>M::Beta
+ 7|>M::AlphaConstant
+ 8|>M::Beta
+ 9|>M::AlphaConstant
+10|>M::Beta}
   end
 
   # different separator
-  it { ::Pipetree[M::AlphaConstant,M::Beta].inspect(",").must_equal %{ 0) M::AlphaConstant, 1) M::Beta} }
+  it { ::Pipetree[M::AlphaConstant,M::Beta].inspect.must_equal %{[M::AlphaConstant|>M::Beta]} }
 end
