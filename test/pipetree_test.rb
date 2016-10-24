@@ -60,8 +60,16 @@ class PipelineTest < MiniTest::Spec
     end
   end
 
+  #---
+  # >1 arguments
 
+  First  = ->(input, options) { input }
+  Second = ->(input, options, memory) { input }
 
+  it do
+    skip
+    Pipetree[First, Second].("", options={}, memory={})
+  end
 
 #   ######### collection :ratings
 
