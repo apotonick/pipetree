@@ -49,45 +49,39 @@ c.calculate({ok?: true})
 
 
 class Pipetree < Array
-  class Or
+  class OnLeft # Or
     def initialize(bla)
       @bla=bla
     end
 
-    def call(input, options)
+    def call(last, input, options)
+      return [last, input] unless last==Left
       @bla.(input, options)
     end
   end
-  class Left < Or
+  class Left < OnLeft
 
   end
-  class Right < Or
+  class Right < OnLeft
 
   end
-  class OnRight < Or
-
+  class OnRight < OnLeft
+    def call(last, input, options)
+      return [last, input] unless last==Right
+      @bla.(input, options)
+    end
   end
-  class OnWhatever < Or
+
+  class OnWhatever < OnLeft
   end
 
   def call(input, options)
     input = [Right, input]
 
     inject(input) do |memooo, step|
-      # return(Stop) if Stop == res
-      op, memo = memooo # op is "incoming op"
-      # puts "@@@@#{op}@ #{memo.inspect} for #{step}"
+      last, memo = memooo
 
-      # this could all be done beautifully polymorphic, but this is faster for now.
-      if op==Right && step.instance_of?(OnRight)
-        next step.call(memo, options)
-      elsif step.instance_of?(Or) # result has to be Left
-        next step.call(memo, options)
-      elsif step.instance_of?(OnWhatever) # still faster than Dry-monads.
-      end
-
-      # Right-->Or
-      memooo
+      step.call(last, memo, options)
     end
   end
 end
@@ -99,14 +93,14 @@ pipe = Pipetree[
       value[:ok?] ? [Pipetree::Right, value] : [Pipetree::Left, value] } ),
   Pipetree::OnRight.new( ->(value, options) { #puts "|>PERSISTENCE";
       value[:persist?] ? [Pipetree::Right, value] : [Pipetree::Left, value] } ),
-  Pipetree::Or.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
+  Pipetree::OnLeft.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
       [Pipetree::Left, value] } ),
   Pipetree::OnRight.new( ->(value, options) { #puts "|>OK=CALLBACK";
       [Pipetree::Right, value] } ),
-  Pipetree::Or.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
+  Pipetree::OnLeft.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
       [Pipetree::Left, value] } ),
 
-  Pipetree::Or.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
+  Pipetree::OnLeft.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
       [Pipetree::Right, value] } ),
 ]
 
