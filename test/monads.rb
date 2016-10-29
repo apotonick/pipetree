@@ -53,7 +53,6 @@ class Pipetree < Array
     def initialize(bla)
       @bla=bla
     end
-    attr_reader :bla
 
     def call(input, options)
       @bla.(input, options)
@@ -68,6 +67,8 @@ class Pipetree < Array
   class OnRight < Or
 
   end
+  class OnWhatever < Or
+  end
 
   def call(input, options)
     input = [Right, input]
@@ -77,13 +78,12 @@ class Pipetree < Array
       op, memo = memooo # op is "incoming op"
       # puts "@@@@#{op}@ #{memo.inspect} for #{step}"
 
-
+      # this could all be done beautifully polymorphic, but this is faster for now.
       if op==Right && step.instance_of?(OnRight)
         next step.call(memo, options)
-      #elsif op==Right && step.class==Left
       elsif step.instance_of?(Or) # result has to be Left
-
         next step.call(memo, options)
+      elsif step.instance_of?(OnWhatever) # still faster than Dry-monads.
       end
 
       # Right-->Or
