@@ -88,19 +88,20 @@ class MonadTest < Minitest::Spec
       pipe.> ->(input, options) { input.reverse }
       # pipe.| B
       # pipe.% A
-      pipe.("Hallo", {}).must_equal %{[A|>B|>A]}
+      pipe.("Hallo", {}).must_equal [Pipetree::Monad::Right, "Hallo"]
      }
   end
 
   #---
   # #inspect
   describe "#inspect" do
-    let (:pipe) { Pipetree::Monad[] }
-    it {
-      pipe.& A
-      pipe.| B
-      pipe.% A
-      pipe.inspect.must_equal %{[A|>B|>A]}
-     }
+    let (:pipe) { Pipetree::Monad[].&(A).|(B).%(A) }
+
+    it { pipe.inspect.must_equal %{[&A,|B,%A]} }
+
+    it { pipe.inspect(style: :rows).must_equal %{
+ 0 &A
+ 1 |B
+ 2 %A} }
   end
 end

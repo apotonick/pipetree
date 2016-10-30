@@ -4,28 +4,38 @@ require "pipetree/inspect"
 
 class Pipetree::Monad < Array # yes, we could inherit, and so on.
   include Pipetree::Inspect
+
   def inspect_for(on)
-    super(on.proc)
+    [super(on.proc), on.operator]
+  end
+
+  def inspect_line(names)
+    string = names.collect { |i, name| "#{name.last}#{name.first}" }.join(",")
+    "[#{string}]"
+  end
+
+  def inspect_row(index, name)
+    "#{index} #{name.last}#{name.first}"
   end
 
 
   def |(proc, options={append: true}) # TODO: allow aliases, etc.
     self.insert! OnLeft.new(
-      ->(input, options) { proc.(input, options) ; [Left, input] }, proc
+      ->(input, options) { proc.(input, options) ; [Left, input] }, proc, "|"
     ), options
   end
 
   # OnRight-> ? Right, input : Left, input
   def &(proc, optionss={append: true})
     self.insert! OnRight.new(
-      ->(input, options) { proc.(input, options) ? [Right, input] : [Left, input] }, proc
+      ->(input, options) { proc.(input, options) ? [Right, input] : [Left, input] }, proc, "&"
     ),optionss
   end
 
   # TODO: test me.
   def >(proc, optionss={append: true})
     self.insert! OnRight.new(
-      ->(input, options) { proc.(input, options); [Right, input] }, proc
+      ->(input, options) { proc.(input, options); [Right, input] }, proc, ">"
     ), optionss
   end
   def <(proc)
@@ -34,13 +44,13 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
 
   def >>(proc, optionss={append: true})
     self.insert! OnRight.new(
-      ->(input, options) { [Right, proc.(input, options)] }, proc
+      ->(input, options) { [Right, proc.(input, options)] }, proc, ">>"
     ), optionss
   end
 
   def %(proc)
     self.insert! OnWhatever.new(
-      ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }, proc
+      ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }, proc, "%"
     ),{append: true}
   end
 
@@ -58,9 +68,10 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   end
 
   class OnLeft # Or
-    def initialize(bla, proc=nil)
+    def initialize(bla, proc=nil, operator=nil)
       @bla=bla
       @proc=proc
+      @operator=operator
     end
 
     def call(last, input, options)
@@ -68,7 +79,7 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
       @bla.(input, options)
     end
 
-    attr_reader :proc # :private:
+    attr_reader :proc, :operator # :private:
   end
 
   Left  = Class.new
@@ -77,7 +88,6 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   class OnRight < OnLeft
     def call(last, input, options)
       return [last, input] unless last==Right
-      puts "calling #{@bla}"
       @bla.(input, options)
     end
   end
