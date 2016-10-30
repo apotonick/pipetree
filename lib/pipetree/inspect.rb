@@ -3,7 +3,7 @@ module Pipetree::Inspect
   # TODO: remove in Representable::Debug.
   def inspect(options={ style: :line })
     names = each_with_index.collect do |func, i|
-      [i, File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]]
+      [i, inspect_for(func)]
     end
 
     if options[:style] == :line
@@ -18,5 +18,9 @@ module Pipetree::Inspect
       # name  = sprintf("%-60.300s", name) # no idea what i'm doing here.
       # "#{index}) #{name} #{func.source_location.join(":")}"
     "\n#{string}"
+  end
+
+  def inspect_for(func)
+    File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]
   end
 end

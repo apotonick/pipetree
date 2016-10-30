@@ -1,22 +1,39 @@
 # condition: Left incoming? Right incoming? Whatever!
+require "pipetree/inspect"
 
 class Pipetree::Monad < Array # yes, we could inherit, and so on.
-  def |(proc) # TODO: allow aliases, etc.
-    self << OnLeft.new(
-      ->(input, options) { proc.(input, options) ; [Left, input] }
-    )
+  include Pipetree::Inspect
+  def inspect_for(on)
+    super(on.proc)
   end
 
-  def &(proc)
-    self << OnRight.new(
-      ->(input, options) { (res = proc.(input, options)) ? [Right, input] : [Left, input] }
-    )
+
+  def |(proc, options={append: true}) # TODO: allow aliases, etc.
+    self.insert! OnLeft.new(
+      ->(input, options) { proc.(input, options) ; [Left, input] }, proc
+    ), options
+  end
+
+  def &(proc, optionss={append: true})
+    self.insert! OnRight.new(
+      ->(input, options) { proc.(input, options) ? [Right, input] : [Left, input] }, proc
+    ),optionss
+  end
+
+  # TODO: test me.
+  def >(proc, optionss={append: true}) # aka "tee".
+    self.insert! OnRight.new(
+      ->(input, options) { [Right, proc.(input, options)] }, proc
+    ), optionss
+  end
+  def <(proc)
+
   end
 
   def %(proc)
-    self << OnWhatever.new(
-      ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }
-    )
+    self.insert! OnWhatever.new(
+      ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }, proc
+    ),{append: true}
   end
 
   def call(input, options)
@@ -30,14 +47,17 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   end
 
   class OnLeft # Or
-    def initialize(bla)
+    def initialize(bla, proc=nil)
       @bla=bla
+      @proc=proc
     end
 
     def call(last, input, options)
       return [last, input] unless last==Left
       @bla.(input, options)
     end
+
+    attr_reader :proc # :private:
   end
 
   Left  = Class.new
@@ -55,4 +75,17 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
       @bla.(last, input, options)
     end
   end
+
+
+
+
+
+
+  require "pipetree/insert"
+  module Macros
+    def insert!(new_function, options)
+      Pipetree::Insert.(self, new_function, options)
+    end
+  end
+  include Macros # FIXME: we shouldn't expose #insert!
 end

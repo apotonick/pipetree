@@ -1,63 +1,6 @@
 require "test_helper"
 
-# condition: Left incoming? Right incoming? Whatever!
-
-class Pipetree::Monad < Array # yes, we could inherit, and so on.
-  def |(proc) # TODO: allow aliases, etc.
-    self << OnLeft.new(
-      ->(input, options) { proc.(input, options) ; [Left, input] }
-    )
-  end
-
-  def &(proc)
-    self << OnRight.new(
-      ->(input, options) { (res = proc.(input, options)) ? [Right, input] : [Left, input] }
-    )
-  end
-
-  def %(proc)
-    self << OnWhatever.new(
-      ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }
-    )
-  end
-
-  def call(input, options)
-    input = [Right, input]
-
-    inject(input) do |memooo, step|
-      last, memo = memooo
-
-      step.call(last, memo, options)
-    end
-  end
-
-  class OnLeft # Or
-    def initialize(bla)
-      @bla=bla
-    end
-
-    def call(last, input, options)
-      return [last, input] unless last==Left
-      @bla.(input, options)
-    end
-  end
-
-  Left  = Class.new
-  Right = Class.new
-
-  class OnRight < OnLeft
-    def call(last, input, options)
-      return [last, input] unless last==Right
-      @bla.(input, options)
-    end
-  end
-
-  class OnWhatever < OnLeft
-    def call(last, input, options)
-      @bla.(last, input, options)
-    end
-  end
-end
+require "pipetree/monad"
 
 # pipe = Pipetree[
 #   Pipetree::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
@@ -114,5 +57,30 @@ class MonadTest < Minitest::Spec
     pipe.(%{{"key": 1,"key2":null}}, options)#.must_equal ""
 
     options.must_equal({"deserializer.result"=>{"key"=>1, "key2"=>nil}, "contract.errors.2"=>"screwd", "after_deserialize.fail"=>true, "meantime"=>true, "after_meantime.left?"=>true})
+  end
+
+  #---
+  # return value is new input.
+  it do
+    pipe = Pipetree::Monad[
+      Pipetree::Monad::OnRight.new( ->(value, options) { [Pipetree::Monad::Right, value.reverse] } )
+    ]
+    pipe.("Hello", {}).must_equal [Pipetree::Monad::Right, "olleH"]
+  end
+
+
+  #---
+  # #inspect
+  describe "#inspect" do
+    A = ->(*) {  }
+    B = ->(*) {  }
+
+    let (:pipe) { Pipetree::Monad[] }
+    it {
+      pipe.& A
+      pipe.| B
+      pipe.% A
+      pipe.inspect.must_equal %{[A|>B|>A]}
+     }
   end
 end

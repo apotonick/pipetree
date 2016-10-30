@@ -9,24 +9,22 @@ class Pipetree < Array
   # we have a fixed set of arguments here, since array splat significantly slows this down, as in
   # call(input, *options)
   def call(input, options)
-    inject(input) do |memo, block|
-      res = evaluate(block, memo, options)
+    inject(input) do |memo, step|
+      res = evaluate(step, memo, options)
       return(Stop) if Stop == res
       res
     end
   end
 
 private
-  def evaluate(block, input, options)
-    block.call(input, options)
+  def evaluate(step, input, options)
+    step.call(input, options)
   end
 
   require "pipetree/inspect"
   include Inspect
 
-  module Macros # TODO: explicit test.
-    # Macro to quickly modify an array of functions via Pipeline::Insert and return a
-    # Pipeline instance.
+  module Macros
     def insert!(new_function, options)
       Pipetree::Insert.(self, new_function, options)
     end
