@@ -26,6 +26,18 @@ require "pipetree/monad"
 require "json"
 
 class MonadTest < Minitest::Spec
+  # TODO: test each function from & to > is only called once!
+  # describe "#call" do
+  #   let (:pipe) { Pipetree::Monad[] }
+  #   it do
+  #     pipe.>> ->(*) { puts "snippet" }
+  #     pipe.({},{})
+  #   end
+  # end
+
+  A = ->(*) {  }
+  B = ->(*) {  }
+
   let (:pipe) { pipe = Pipetree::Monad[]
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
@@ -68,13 +80,21 @@ class MonadTest < Minitest::Spec
     pipe.("Hello", {}).must_equal [Pipetree::Monad::Right, "olleH"]
   end
 
+  #---
+  # #>
+  describe "#>" do
+    let (:pipe) { Pipetree::Monad[] }
+    it {
+      pipe.> ->(input, options) { input.reverse }
+      # pipe.| B
+      # pipe.% A
+      pipe.("Hallo", {}).must_equal %{[A|>B|>A]}
+     }
+  end
 
   #---
   # #inspect
   describe "#inspect" do
-    A = ->(*) {  }
-    B = ->(*) {  }
-
     let (:pipe) { Pipetree::Monad[] }
     it {
       pipe.& A

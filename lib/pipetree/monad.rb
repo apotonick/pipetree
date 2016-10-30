@@ -1,4 +1,5 @@
 # condition: Left incoming? Right incoming? Whatever!
+# brings default "return behavior", e.g. > always returns [Right, input]
 require "pipetree/inspect"
 
 class Pipetree::Monad < Array # yes, we could inherit, and so on.
@@ -14,6 +15,7 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
     ), options
   end
 
+  # OnRight-> ? Right, input : Left, input
   def &(proc, optionss={append: true})
     self.insert! OnRight.new(
       ->(input, options) { proc.(input, options) ? [Right, input] : [Left, input] }, proc
@@ -21,13 +23,19 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   end
 
   # TODO: test me.
-  def >(proc, optionss={append: true}) # aka "tee".
+  def >(proc, optionss={append: true})
     self.insert! OnRight.new(
-      ->(input, options) { [Right, proc.(input, options)] }, proc
+      ->(input, options) { proc.(input, options); [Right, input] }, proc
     ), optionss
   end
   def <(proc)
 
+  end
+
+  def >>(proc, optionss={append: true})
+    self.insert! OnRight.new(
+      ->(input, options) { [Right, proc.(input, options)] }, proc
+    ), optionss
   end
 
   def %(proc)
@@ -41,9 +49,12 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
 
     inject(input) do |memooo, step|
       last, memo = memooo
-
       step.call(last, memo, options)
     end
+  end
+
+  def index(func) # FIXME: test me.
+    super(find { |on| on.proc == func } )
   end
 
   class OnLeft # Or
@@ -66,6 +77,7 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   class OnRight < OnLeft
     def call(last, input, options)
       return [last, input] unless last==Right
+      puts "calling #{@bla}"
       @bla.(input, options)
     end
   end
