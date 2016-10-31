@@ -47,27 +47,27 @@ c = EitherCalculator.new
 c.calculate({ok?: true})
 # c.calculate({ok?: true, persist?: true})
 
-require "pipetree/monad"
+require "pipetree/flow"
 
 # 254.186k (± 1.2%) i/s -      1.289M in   5.071256s # pure dry-monads
 # 268.407k (± 1.6%) i/s -      1.353M in   5.043612s # pipetree-flow
 
-pipe = Pipetree::Monad[
-  Pipetree::Monad::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
-      value.nil? ? [Pipetree::Monad::Left, value] : [Pipetree::Monad::Right, value] } ),
-  Pipetree::Monad::OnRight.new( ->(value, options) { #puts "|>VALIDATION"
-      value[:ok?] ? [Pipetree::Monad::Right, value] : [Pipetree::Monad::Left, value] } ),
-  Pipetree::Monad::OnRight.new( ->(value, options) { #puts "|>PERSISTENCE";
-      value[:persist?] ? [Pipetree::Monad::Right, value] : [Pipetree::Monad::Left, value] } ),
-  Pipetree::Monad::OnLeft.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
-      [Pipetree::Monad::Left, value] } ),
-  Pipetree::Monad::OnRight.new( ->(value, options) { #puts "|>OK=CALLBACK";
-      [Pipetree::Monad::Right, value] } ),
-  Pipetree::Monad::OnLeft.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
-      [Pipetree::Monad::Left, value] } ),
+pipe = Pipetree::Flow[
+  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
+      value.nil? ? [Pipetree::Flow::Left, value] : [Pipetree::Flow::Right, value] } ),
+  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>VALIDATION"
+      value[:ok?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
+  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>PERSISTENCE";
+      value[:persist?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
+  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
+      [Pipetree::Flow::Left, value] } ),
+  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>OK=CALLBACK";
+      [Pipetree::Flow::Right, value] } ),
+  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
+      [Pipetree::Flow::Left, value] } ),
 
-  Pipetree::Monad::OnLeft.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
-      [Pipetree::Monad::Right, value] } ),
+  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
+      [Pipetree::Flow::Right, value] } ),
 ]
 
 puts "Pipetree"
@@ -76,7 +76,7 @@ pipe.({ok?: true}, {})
  # exit
 
 
-flow = Pipetree::Monad[]
+flow = Pipetree::Flow[]
 flow.& ->(value, options) {
   #puts "|>DESERIALIZATION"
   !value.nil? }
@@ -86,16 +86,16 @@ flow.& ->(value, options) {
 flow.& ->(value, options) {
   #puts "|>PERSISTENCE";
   value[:persist?] }
-flow.| ->(value, options) {
-  #puts "|| INVALID=CALLBACK";
+flow.< ->(value, options) {
+  #puts "< INVALID=CALLBACK";
   value }
 flow.& ->(value, options) {
-  #puts "|>OK=CALLBACK";
+  #puts "<>OK=CALLBACK";
   value }
-flow.| ->(value, options) {
-  #puts "|| SECOND-INVALID=CALLBACK";
+flow.< ->(value, options) {
+  #puts "< SECOND-INVALID=CALLBACK";
   value }
-flow.| ->(value, options) {
+flow.< ->(value, options) {
   #puts "|| FIXING IT=CALLBACK"
   value }
 
