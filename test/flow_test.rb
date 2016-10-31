@@ -1,6 +1,6 @@
 require "test_helper"
 
-require "pipetree/monad"
+require "pipetree/flow"
 
 # pipe = Pipetree[
 #   Pipetree::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
@@ -25,10 +25,10 @@ require "pipetree/monad"
 
 require "json"
 
-class MonadTest < Minitest::Spec
+class FlowTest < Minitest::Spec
   # TODO: test each function from & to > is only called once!
   # describe "#call" do
-  #   let (:pipe) { Pipetree::Monad[] }
+  #   let (:pipe) { Pipetree::Flow[] }
   #   it do
   #     pipe.>> ->(*) { puts "snippet" }
   #     pipe.({},{})
@@ -38,7 +38,7 @@ class MonadTest < Minitest::Spec
   A = ->(*) {  }
   B = ->(*) {  }
 
-  let (:pipe) { pipe = Pipetree::Monad[]
+  let (:pipe) { pipe = Pipetree::Flow[]
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
     pipe.& ->(value, options) { options["deserializer.result"]["key2"] == 2 ? true : (options["contract.errors.2"]="screwd";false) }
@@ -74,28 +74,28 @@ class MonadTest < Minitest::Spec
   #---
   # return value is new input.
   it do
-    pipe = Pipetree::Monad[
-      Pipetree::Monad::OnRight.new( ->(value, options) { [Pipetree::Monad::Right, value.reverse] } )
+    pipe = Pipetree::Flow[
+      Pipetree::Flow::OnRight.new( ->(value, options) { [Pipetree::Flow::Right, value.reverse] } )
     ]
-    pipe.("Hello", {}).must_equal [Pipetree::Monad::Right, "olleH"]
+    pipe.("Hello", {}).must_equal [Pipetree::Flow::Right, "olleH"]
   end
 
   #---
   # #>
   describe "#>" do
-    let (:pipe) { Pipetree::Monad[] }
+    let (:pipe) { Pipetree::Flow[] }
     it {
       pipe.> ->(input, options) { input.reverse }
       # pipe.| B
       # pipe.% A
-      pipe.("Hallo", {}).must_equal [Pipetree::Monad::Right, "Hallo"]
+      pipe.("Hallo", {}).must_equal [Pipetree::Flow::Right, "Hallo"]
      }
   end
 
   #---
   # #inspect
   describe "#inspect" do
-    let (:pipe) { Pipetree::Monad[].&(A).<(B).%(A) }
+    let (:pipe) { Pipetree::Flow[].&(A).<(B).%(A) }
 
     it { pipe.inspect.must_equal %{[&A,<B,%A]} }
 

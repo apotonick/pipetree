@@ -1,29 +1,15 @@
 # condition: Left incoming? Right incoming? Whatever!
 # brings default "return behavior", e.g. > always returns [Right, input]
-require "pipetree/inspect"
-
-class Pipetree::Monad < Array # yes, we could inherit, and so on.
-  include Pipetree::Inspect
-
-  def inspect_for(on)
-    [super(on.proc), on.operator]
-  end
-
-  def inspect_line(names)
-    string = names.collect { |i, name| "#{name.last}#{name.first}" }.join(",")
-    "[#{string}]"
-  end
-
-  def inspect_row(index, name)
-    "#{index} #{name.last}#{name.first}"
-  end
-
+class Pipetree::Flow < Array # yes, we could inherit, and so on.
+  require "pipetree/flow/inspect"
+  include Inspect
 
   def <(proc, options={append: true}) # TODO: allow aliases, etc.
     self.insert! OnLeft.new(
       ->(input, options) { proc.(input, options) ; [Left, input] }, proc, "<"
     ), options
   end
+  # TODO: do we need the | operator?
 
   # OnRight-> ? Right, input : Left, input
   def &(proc, options={append: true})
