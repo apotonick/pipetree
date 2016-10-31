@@ -42,9 +42,9 @@ class MonadTest < Minitest::Spec
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
     pipe.& ->(value, options) { options["deserializer.result"]["key2"] == 2 ? true : (options["contract.errors.2"]="screwd";false) }
-    pipe.| ->(value, options) { options["after_deserialize.fail"]=true }
+    pipe.< ->(value, options) { options["after_deserialize.fail"]=true }
     pipe.% ->(value, options) { options["meantime"] = true }
-    pipe.| ->(value, options) { options["after_meantime.left?"]=true; false } # false is ignored.
+    pipe.< ->(value, options) { options["after_meantime.left?"]=true; false } # false is ignored.
 
   }
 
@@ -95,13 +95,13 @@ class MonadTest < Minitest::Spec
   #---
   # #inspect
   describe "#inspect" do
-    let (:pipe) { Pipetree::Monad[].&(A).|(B).%(A) }
+    let (:pipe) { Pipetree::Monad[].&(A).<(B).%(A) }
 
-    it { pipe.inspect.must_equal %{[&A,|B,%A]} }
+    it { pipe.inspect.must_equal %{[&A,<B,%A]} }
 
     it { pipe.inspect(style: :rows).must_equal %{
  0 &A
- 1 |B
+ 1 <B
  2 %A} }
   end
 end

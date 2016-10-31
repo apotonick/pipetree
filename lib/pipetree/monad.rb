@@ -19,33 +19,30 @@ class Pipetree::Monad < Array # yes, we could inherit, and so on.
   end
 
 
-  def |(proc, options={append: true}) # TODO: allow aliases, etc.
+  def <(proc, options={append: true}) # TODO: allow aliases, etc.
     self.insert! OnLeft.new(
-      ->(input, options) { proc.(input, options) ; [Left, input] }, proc, "|"
+      ->(input, options) { proc.(input, options) ; [Left, input] }, proc, "<"
     ), options
   end
 
   # OnRight-> ? Right, input : Left, input
-  def &(proc, optionss={append: true})
+  def &(proc, options={append: true})
     self.insert! OnRight.new(
       ->(input, options) { proc.(input, options) ? [Right, input] : [Left, input] }, proc, "&"
-    ),optionss
+    ),options
   end
 
   # TODO: test me.
-  def >(proc, optionss={append: true})
+  def >(proc, options={append: true})
     self.insert! OnRight.new(
       ->(input, options) { proc.(input, options); [Right, input] }, proc, ">"
-    ), optionss
-  end
-  def <(proc)
-
+    ), options
   end
 
-  def >>(proc, optionss={append: true})
+  def >>(proc, options={append: true})
     self.insert! OnRight.new(
       ->(input, options) { [Right, proc.(input, options)] }, proc, ">>"
-    ), optionss
+    ), options
   end
 
   def %(proc)
