@@ -4,21 +4,21 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
 
   module Operators
     # Optimize the most common steps with Stay/And objects that are faster than procs.
-    def <(proc, options={append: true}) # TODO: allow aliases, etc.
+    def <(proc, options=nil) # TODO: allow aliases, etc.
       insert OnLeft.new(Stay.new(proc)), options, proc, "<"
     end
 
     # OnRight-> ? Right, input : Left, input
-    def &(proc, options={append: true})
+    def &(proc, options=nil)
       insert OnRight.new(And.new(proc)), options, proc, "&"
     end
 
     # TODO: test me.
-    def >(proc, options={append: true})
+    def >(proc, options=nil)
       insert OnRight.new(Stay.new(proc)), options, proc, ">"
     end
 
-    def >>(proc, options={append: true})
+    def >>(proc, options=nil)
       insert OnRight.new(
         ->(input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
@@ -30,6 +30,8 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
     end
 
     def insert(step, options, proc, operator)
+      options ||= { append: true } # DISCUSS: needed?
+
       insert!(step, options).tap do
         @debug ||= {}
         @debug[step] = Inspect::Proc.new(proc, operator)
@@ -79,7 +81,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   end
 
   # Incoming direction not considered.
-  class OnWhatever < OnLeft
+  class OnWhatever < OnLeft# TODOOOO REPLACE WITH STAY
     def call(last, input, options)
       @proc.(last, input, options)
     end
@@ -91,6 +93,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
     def initialize(proc)
       @proc = proc
     end
+
     def call(last, input, options)
       @proc.(input, options) ? [Right, input] : [Left,  input]
     end
