@@ -23,10 +23,9 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
         ->(input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
 
-    def %(proc)
-      insert OnWhatever.new(
-
-        ->(incoming, input, options) { proc.(input, options) ; [incoming, input] } ), {append: true}, proc, "%"
+    def %(proc, options=nil)
+      # no condition is needed, and we want to stay on the same track, too.
+      insert Stay.new(proc), options, proc, "%"
     end
 
     def insert(step, options, proc, operator)
@@ -76,13 +75,6 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   class OnRight < OnLeft
     def call(last, input, options)
       return [last, input] unless last==Right
-      @proc.(last, input, options)
-    end
-  end
-
-  # Incoming direction not considered.
-  class OnWhatever < OnLeft# TODOOOO REPLACE WITH STAY
-    def call(last, input, options)
       @proc.(last, input, options)
     end
   end
