@@ -75,7 +75,7 @@ class FlowTest < Minitest::Spec
   # return value is new input.
   it do
     pipe = Pipetree::Flow[
-      Pipetree::Flow::OnRight.new( ->(value, options) { [Pipetree::Flow::Right, value.reverse] } )
+      Pipetree::Flow::OnRight.new( ->(last, value, options) { [Pipetree::Flow::Right, value.reverse] } )
     ]
     pipe.("Hello", {}).must_equal [Pipetree::Flow::Right, "olleH"]
   end

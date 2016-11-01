@@ -53,20 +53,20 @@ require "pipetree/flow"
 # 268.407k (± 1.6%) i/s -      1.353M in   5.043612s # pipetree-flow
 
 pipe = Pipetree::Flow[
-  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
+  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>DESERIALIZATION"
       value.nil? ? [Pipetree::Flow::Left, value] : [Pipetree::Flow::Right, value] } ),
-  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>VALIDATION"
+  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>VALIDATION"
       value[:ok?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>PERSISTENCE";
+  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>PERSISTENCE";
       value[:persist?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
+  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| INVALID=CALLBACK";
       [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnRight.new( ->(value, options) { #puts "|>OK=CALLBACK";
+  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>OK=CALLBACK";
       [Pipetree::Flow::Right, value] } ),
-  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
+  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| SECOND-INVALID=CALLBACK";
       [Pipetree::Flow::Left, value] } ),
 
-  Pipetree::Flow::OnLeft.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
+  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| FIXING IT=CALLBACK";
       [Pipetree::Flow::Right, value] } ),
 ]
 
@@ -139,3 +139,42 @@ end
 #   x.report { proc.is_a?(Proc) }
 #   x.report { a.()  }
 # end
+
+
+
+
+# 258.340k (± 1.0%) i/s -      1.297M in   5.020288s
+# 266.743k (± 0.9%) i/s -      1.345M in   5.043017s
+# 215.273k (± 1.0%) i/s -      1.089M in   5.060944s
+
+
+class A
+  def initialize
+    @b = B.new
+  end
+
+  class B
+    def b
+      "B"
+    end
+  end
+
+  def b
+    @b.b
+  end
+end
+
+class One
+  def b
+    b_internal
+  end
+
+  def b_internal
+    "B"
+  end
+end
+
+Benchmark.ips do |x|
+  x.report { A.new.b }
+  x.report { One.new.b }
+end
