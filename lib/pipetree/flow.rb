@@ -1,36 +1,39 @@
-# condition: Left incoming? Right incoming? Whatever!
-# brings default "return behavior", e.g. > always returns [Right, input]
 class Pipetree::Flow < Array # yes, we could inherit, and so on.
   require "pipetree/flow/inspect"
   include Inspect
 
   module Operators
-    # Optimize the most common steps with To* objects that are faster than procs.
+    # Optimize the most common steps with Stay/And objects that are faster than procs.
     def <(proc, options={append: true}) # TODO: allow aliases, etc.
-      self.insert! OnLeft.new(Stay.new(proc), proc, "<"), options
+      insert OnLeft.new(Stay.new(proc)), options, proc, "<"
     end
 
     # OnRight-> ? Right, input : Left, input
     def &(proc, options={append: true})
-      self.insert! OnRight.new(And.new(proc), proc, "&"),options
+      insert OnRight.new(And.new(proc)), options, proc, "&"
     end
 
     # TODO: test me.
     def >(proc, options={append: true})
-      self.insert! OnRight.new(Stay.new(proc), proc, ">"), options
+      insert OnRight.new(Stay.new(proc)), options, proc, ">"
     end
 
     def >>(proc, options={append: true})
-      self.insert! OnRight.new(
-        ->(input, options) { [Right, proc.(input, options)] }, proc, ">>"
-      ), options
+      insert OnRight.new(
+        ->(input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
 
     def %(proc)
-      self.insert! OnWhatever.new(
+      insert OnWhatever.new(
 
-        ->(incoming, input, options) { proc.(input, options) ; [incoming, input] }, proc, "%"
-      ),{append: true}
+        ->(incoming, input, options) { proc.(input, options) ; [incoming, input] } ), {append: true}, proc, "%"
+    end
+
+    def insert(step, options, proc, operator)
+      insert!(step, options).tap do
+        @debug ||= {}
+        @debug[step] = Inspect::Proc.new(proc, operator)
+      end
     end
   end
   include Operators
@@ -57,32 +60,28 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
 
   # Incoming direction must be Left.
   class OnLeft
-    def initialize(bla, proc=nil, operator=nil)
-      @bla=bla
-      @proc=proc
-      @operator=operator
+    def initialize(proc)
+      @proc = proc
     end
 
     def call(last, input, options)
       return [last, input] unless last==Left
-      @bla.(last, input, options)
+      @proc.(last, input, options)
     end
-
-    attr_reader :proc, :operator # :private:
   end
 
   # Incoming direction must be Right.
   class OnRight < OnLeft
     def call(last, input, options)
       return [last, input] unless last==Right
-      @bla.(last, input, options)
+      @proc.(last, input, options)
     end
   end
 
   # Incoming direction not considered.
   class OnWhatever < OnLeft
     def call(last, input, options)
-      @bla.(last, input, options)
+      @proc.(last, input, options)
     end
   end
 
@@ -93,9 +92,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
       @proc = proc
     end
     def call(last, input, options)
-      @proc.(input, options) ?
-        [Right, input] :
-        [Left,  input]
+      @proc.(input, options) ? [Right, input] : [Left,  input]
     end
   end
 

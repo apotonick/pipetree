@@ -3,8 +3,11 @@ require "pipetree/inspect"
 module Pipetree::Flow::Inspect
   include ::Pipetree::Inspect
 
-  def inspect_for(on)
-    [super(on.proc), on.operator]
+  Proc = Struct.new(:proc, :operator)
+
+  def inspect_for(step)
+    debug = @debug[step]
+    [super(debug.proc), debug.operator]
   end
 
   def inspect_line(names)
