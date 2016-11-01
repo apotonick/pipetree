@@ -5,21 +5,21 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   module Operators
     # Optimize the most common steps with Stay/And objects that are faster than procs.
     def <(proc, options=nil) # TODO: allow aliases, etc.
-      insert OnLeft.new(Stay.new(proc)), options, proc, "<"
+      insert On.new(Left, Stay.new(proc)), options, proc, "<"
     end
 
     # OnRight-> ? Right, input : Left, input
     def &(proc, options=nil)
-      insert OnRight.new(And.new(proc)), options, proc, "&"
+      insert On.new(Right, And.new(proc)), options, proc, "&"
     end
 
     # TODO: test me.
     def >(proc, options=nil)
-      insert OnRight.new(Stay.new(proc)), options, proc, ">"
+      insert On.new(Right, Stay.new(proc)), options, proc, ">"
     end
 
     def >>(proc, options=nil)
-      insert OnRight.new(
+      insert On.new(Right,
         ->(input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
 
@@ -39,6 +39,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   end
   include Operators
 
+  # Actual implementation of Pipetree:Flow. Yes, it's that simple!
   def call(input, options)
     input = [Right, input]
 
@@ -56,31 +57,19 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   Left  = Class.new
   Right = Class.new
 
-  # Handler wrapping the actual step logic and skip if wrong track.
-  # Operators use those handlers.
-
-  # Incoming direction must be Left.
-  class OnLeft
-    def initialize(proc)
-      @proc = proc
+  # Incoming direction must be Left/Right.
+  class On
+    def initialize(direction, proc)
+      @direction, @proc = direction, proc
     end
 
     def call(last, input, options)
-      return [last, input] unless last==Left
+      return [last, input] unless last == @direction # return unless incoming direction is Right (or Left).
       @proc.(last, input, options)
     end
   end
 
-  # Incoming direction must be Right.
-  class OnRight < OnLeft
-    def call(last, input, options)
-      return [last, input] unless last==Right
-      @proc.(last, input, options)
-    end
-  end
-
-  # Calls the actual step and provides common behavior.
-
+  # Call step proc and return (Right || Left).
   class And
     def initialize(proc)
       @proc = proc
@@ -91,6 +80,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
     end
   end
 
+  # Call step proc and return incoming last step.
   class Stay < And
     def call(last, input, options)
       @proc.(input, options)

@@ -53,20 +53,20 @@ require "pipetree/flow"
 # 268.407k (± 1.6%) i/s -      1.353M in   5.043612s # pipetree-flow
 
 pipe = Pipetree::Flow[
-  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>DESERIALIZATION"
+  Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { #puts "|>DESERIALIZATION"
       value.nil? ? [Pipetree::Flow::Left, value] : [Pipetree::Flow::Right, value] } ),
-  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>VALIDATION"
+  Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { #puts "|>VALIDATION"
       value[:ok?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>PERSISTENCE";
+  Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { #puts "|>PERSISTENCE";
       value[:persist?] ? [Pipetree::Flow::Right, value] : [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| INVALID=CALLBACK";
+  Pipetree::Flow::On.new(Pipetree::Flow::Left, ->(last, value, options) { #puts "|| INVALID=CALLBACK";
       [Pipetree::Flow::Left, value] } ),
-  Pipetree::Flow::OnRight.new( ->(last, value, options) { #puts "|>OK=CALLBACK";
+  Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { #puts "|>OK=CALLBACK";
       [Pipetree::Flow::Right, value] } ),
-  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| SECOND-INVALID=CALLBACK";
+  Pipetree::Flow::On.new(Pipetree::Flow::Left, ->(last, value, options) { #puts "|| SECOND-INVALID=CALLBACK";
       [Pipetree::Flow::Left, value] } ),
 
-  Pipetree::Flow::OnLeft.new( ->(last, value, options) { #puts "|| FIXING IT=CALLBACK";
+  Pipetree::Flow::On.new(Pipetree::Flow::Left, ->(last, value, options) { #puts "|| FIXING IT=CALLBACK";
       [Pipetree::Flow::Right, value] } ),
 ]
 
