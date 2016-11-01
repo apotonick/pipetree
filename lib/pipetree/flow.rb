@@ -5,31 +5,32 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
   module Operators
     # Optimize the most common steps with Stay/And objects that are faster than procs.
     def <(proc, options=nil)
-      insert On.new(Left, Stay.new(proc)), options, proc, "<"
+      _insert On.new(Left, Stay.new(proc)), options, proc, "<"
     end
 
     # OnRight-> ? Right, input : Left, input
     def &(proc, options=nil)
-      insert On.new(Right, And.new(proc)), options, proc, "&"
+      _insert On.new(Right, And.new(proc)), options, proc, "&"
     end
 
     # TODO: test me.
     def >(proc, options=nil)
-      insert On.new(Right, Stay.new(proc)), options, proc, ">"
+      _insert On.new(Right, Stay.new(proc)), options, proc, ">"
     end
 
     def >>(proc, options=nil)
-      insert On.new(Right,
+      _insert On.new(Right,
         ->(last, input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
 
     def %(proc, options=nil)
       # no condition is needed, and we want to stay on the same track, too.
-      insert Stay.new(proc), options, proc, "%"
+      _insert Stay.new(proc), options, proc, "%"
     end
 
+    # :private:
     # proc is the original step proc, e.g. Validate.
-    def insert(step, options, proc, operator)
+    def _insert(step, options, proc, operator)
       options ||= { append: true } # DISCUSS: needed?
 
       insert!(step, options).tap do

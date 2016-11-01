@@ -27,3 +27,18 @@ class AlteringTest < Minitest::Spec
   it { Pipetree[A,B].insert!(C, prepend: true).inspect.must_equal %{[C|>A|>B]} }
   it { Pipetree[].insert!(C, prepend: true).inspect.must_equal %{[C]} }
 end
+
+class FlowInsertTest < Minitest::Spec
+  A = ->{ }
+  B = ->{ }
+  C = ->{ }
+
+  it { pipe = Pipetree::Flow[].>(A).>(B).inspect.must_equal %{[>A,>B]} }
+  it { pipe = Pipetree::Flow[].>(A).>(B, before: A).inspect.must_equal %{[>B,>A]} }
+  it { pipe = Pipetree::Flow[].>(A).>(B).>(C, after: A).inspect.must_equal %{[>A,>C,>B]} }
+  it { pipe = Pipetree::Flow[].>(A).>(C, append: true).inspect.must_equal %{[>A,>C]} }
+  it { pipe = Pipetree::Flow[].>(A).>(C, prepend: true).inspect.must_equal %{[>C,>A]} }
+  # it { pipe = Pipetree::Flow[].>(A).>(C, replace: A).inspect.must_equal %{[>C]} }
+
+  # FIXME: add :delete and :replace.
+end
