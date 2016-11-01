@@ -75,7 +75,7 @@ class FlowTest < Minitest::Spec
   # return value is new input.
   it do
     pipe = Pipetree::Flow[
-      Pipetree::Flow::OnRight.new( ->(last, value, options) { [Pipetree::Flow::Right, value.reverse] } )
+      Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { [Pipetree::Flow::Right, value.reverse] } )
     ]
     pipe.("Hello", {}).must_equal [Pipetree::Flow::Right, "olleH"]
   end
@@ -92,6 +92,15 @@ class FlowTest < Minitest::Spec
      }
   end
 
+  # #>>
+  describe "#>>" do
+    let (:pipe) { Pipetree::Flow[] }
+    it {
+      pipe.>> ->(input, options) { input.reverse }
+      pipe.("Hallo", {}).must_equal [Pipetree::Flow::Right, "ollaH"]
+     }
+  end
+
   #---
   # #inspect
   describe "#inspect" do
@@ -104,4 +113,13 @@ class FlowTest < Minitest::Spec
  1 <B
  2 %A} }
   end
+
+  describe "#index" do
+    let (:pipe) { Pipetree::Flow[].&(A).<(B).%(A) }
+
+    it { pipe.index(B).must_equal 1 }
+    it { pipe.index(A).must_equal 0 }
+  end
 end
+
+# TODO: instead of testing #index, test all options like :before, etc.

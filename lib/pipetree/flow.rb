@@ -4,7 +4,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
 
   module Operators
     # Optimize the most common steps with Stay/And objects that are faster than procs.
-    def <(proc, options=nil) # TODO: allow aliases, etc.
+    def <(proc, options=nil)
       insert On.new(Left, Stay.new(proc)), options, proc, "<"
     end
 
@@ -20,7 +20,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
 
     def >>(proc, options=nil)
       insert On.new(Right,
-        ->(input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
+        ->(last, input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
     end
 
     def %(proc, options=nil)
@@ -28,6 +28,7 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
       insert Stay.new(proc), options, proc, "%"
     end
 
+    # proc is the original step proc, e.g. Validate.
     def insert(step, options, proc, operator)
       options ||= { append: true } # DISCUSS: needed?
 
@@ -49,8 +50,8 @@ class Pipetree::Flow < Array # yes, we could inherit, and so on.
     end
   end
 
-  def index(func) # FIXME: test me.
-    super(find { |on| on.proc == func } )
+  def index(step) # @debug maps the original user's step proc to the On instance (or any kind of wrapper proc).
+    @debug.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
   end
 
   # Directions emitted by steps.
