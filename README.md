@@ -1,3 +1,5 @@
+Example use: trailblazer.to/gems/operation/2.0/pipetree.html
+
 
 Executing a pipetree generated from declarative configuration.
 
