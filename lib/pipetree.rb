@@ -1,6 +1,4 @@
 class Pipetree < Array
-  VERSION = "0.0.1"
-
   # Allows to implement a pipeline of filters where a value gets passed in and the result gets
   # passed to the next callable object.
   Stop = Class.new

@@ -16,7 +16,7 @@ module Pipetree::Function
   private
     def replace!(arr, old_func, new_func)
       arr.each_with_index { |func, index|
-        if func.is_a?(Collect)
+        if func.is_a?(::Pipetree::Collect)
           arr[index] = Collect[*Pipeline::Insert.(func, new_func, replace: old_func)]
         end
 
