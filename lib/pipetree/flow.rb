@@ -5,26 +5,26 @@ class Pipetree < Array
 
     module Operators
       # Optimize the most common steps with Stay/And objects that are faster than procs.
-      def <(proc, options=nil)
+      def <(proc, options={})
         _insert On.new(Left, Stay.new(proc)), options, proc, "<"
       end
 
       # OnRight-> ? Right, input : Left, input
-      def &(proc, options=nil)
+      def &(proc, options={})
         _insert On.new(Right, And.new(proc)), options, proc, "&"
       end
 
       # TODO: test me.
-      def >(proc, options=nil)
+      def >(proc, options={})
         _insert On.new(Right, Stay.new(proc)), options, proc, ">"
       end
 
-      def >>(proc, options=nil)
+      def >>(proc, options={})
         _insert On.new(Right,
           ->(last, input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
       end
 
-      def %(proc, options=nil)
+      def %(proc, options={})
         # no condition is needed, and we want to stay on the same track, too.
         _insert Stay.new(proc), options, proc, "%"
       end
@@ -32,11 +32,12 @@ class Pipetree < Array
       # :private:
       # proc is the original step proc, e.g. Validate.
       def _insert(step, options, proc, operator)
-        options ||= { append: true } # DISCUSS: needed?
+        name = options[:name]
+        options = { append: true } if options.empty? || options.keys == [:name]
 
         insert!(step, options).tap do
           @debug ||= {}
-          @debug[step] = Inspect::Proc.new(proc, operator)
+          @debug[step] = Inspect::Proc.new(name, proc, operator)
         end
       end
     end
@@ -53,6 +54,7 @@ class Pipetree < Array
     end
 
     def index(step) # @debug maps the original user's step proc to the On instance (or any kind of wrapper proc).
+      puts "@@@@@ #{step.inspect}"
       @debug.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
     end
 

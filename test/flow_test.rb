@@ -28,7 +28,7 @@ require "json"
 class FlowTest < Minitest::Spec
   # TODO: test each function from & to > is only called once!
   # describe "#call" do
-  #   let (:pipe) { Pipetree::Flow[] }
+  #   let (:pipe) { Pipetree::Flow.new }
   #   it do
   #     pipe.>> ->(*) { puts "snippet" }
   #     pipe.({},{})
@@ -38,7 +38,7 @@ class FlowTest < Minitest::Spec
   Aaa = ->(*) {  }
   B   = ->(*) {  }
 
-  let (:pipe) { pipe = Pipetree::Flow[]
+  let (:pipe) { pipe = Pipetree::Flow.new
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
     pipe.& ->(value, options) { options["deserializer.result"]["key2"] == 2 ? true : (options["contract.errors.2"]="screwd";false) }
@@ -64,7 +64,7 @@ class FlowTest < Minitest::Spec
     options.must_equal({"deserializer.result"=>{"key"=>2}, "contract.errors"=>false, "after_deserialize.fail"=>true, "meantime"=>true, "after_meantime.left?"=>true})
   end
 
-  it "what" do
+  it do
     options = {}
     pipe.(%{{"key": 1,"key2":null}}, options)#.must_equal ""
 
@@ -83,7 +83,7 @@ class FlowTest < Minitest::Spec
   #---
   # #>
   describe "#>" do
-    let (:pipe) { Pipetree::Flow[] }
+    let (:pipe) { Pipetree::Flow.new }
     it {
       pipe.> ->(input, options) { input.reverse }
       # pipe.| B
@@ -94,7 +94,7 @@ class FlowTest < Minitest::Spec
 
   # #>>
   describe "#>>" do
-    let (:pipe) { Pipetree::Flow[] }
+    let (:pipe) { Pipetree::Flow.new }
     it {
       pipe.>> ->(input, options) { input.reverse }
       pipe.("Hallo", {}).must_equal [Pipetree::Flow::Right, "ollaH"]
@@ -107,7 +107,7 @@ class FlowTest < Minitest::Spec
   Long      = ->(*) { snippet }
 
   describe "#inspect" do
-    let (:pipe) { Pipetree::Flow[].&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long) }
+    let (:pipe) { Pipetree::Flow.new.&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long) }
 
     it { pipe.inspect.must_equal %{[&Aaa,>>Long,<B,%Aaa,<Seventeen,>Long]} }
 
@@ -121,10 +121,27 @@ class FlowTest < Minitest::Spec
   end
 
   describe "#index" do
-    let (:pipe) { Pipetree::Flow[].&(Aaa).<(B).%(Aaa) }
+    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa) }
 
     it { pipe.index(B).must_equal 1 }
     it { pipe.index(Aaa).must_equal 0 }
+  end
+
+  #---
+  # with aliases
+  it do
+    pipe = Pipetree::Flow.new.
+      >(Aaa, name: "pipe.aaa").
+      >(B, name: "pipe.b").
+      >(Aaa, name: "pipe.aaa.aaa")
+
+    pipe.inspect.must_equal %{[>pipe.aaa,>pipe.b,>pipe.aaa.aaa]}
+    pipe.inspect(style: :rows).must_equal %{
+ 0 =============================>pipe.aaa
+ 1 ===============================>pipe.b
+ 2 =========================>pipe.aaa.aaa}
+
+    pipe.>(Long, after: "pipe.b").inspect.must_equal %{}
   end
 end
 
