@@ -40,6 +40,12 @@ class Pipetree < Array
           @step2proc[step] = Inspect::Proc.new(name, proc, operator)
         end
       end
+
+      # :private:
+      def index(step) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
+        method = step.is_a?(String) ? :name : :proc
+        @step2proc.find { |on, inspect_proc| inspect_proc.send(method) == step and return super(on) }
+      end
     end
     include Operators
 
@@ -51,14 +57,6 @@ class Pipetree < Array
         last, memo = memooo
         step.call(last, memo, options)
       end
-    end
-
-    def index(step) # @step2proc maps the original user's step proc to the On instance (or any kind of wrapper proc).
-      if step.is_a?(String)
-        return @step2proc.find { |on, inspect_proc| inspect_proc.name == step and return super(on) }
-      end
-
-      @step2proc.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
     end
 
     # Directions emitted by steps.
