@@ -7,14 +7,7 @@ module Pipetree::Inspect
     end
 
     return inspect_line(names) if options[:style] == :line
-
-    string = names.collect do |i, name|
-      index = sprintf("%2d", i)
-      inspect_row(index, name)
-    end.join("\n")
-      # name  = sprintf("%-60.300s", name) # no idea what i'm doing here.
-      # "#{index}) #{name} #{func.source_location.join(":")}"
-    "\n#{string}"
+    inspect_rows(names)
   end
 
   # open source file to retrieve the constant name.
@@ -25,6 +18,16 @@ module Pipetree::Inspect
   def inspect_line(names)
     string = names.collect { |i, name| "#{name}" }.join("|>")
     "[#{string}]"
+  end
+
+  def inspect_rows(names)
+    string = names.collect do |i, name|
+      index = sprintf("%2d", i)
+      inspect_row(index, name)
+    end.join("\n")
+      # name  = sprintf("%-60.300s", name) # no idea what i'm doing here.
+      # "#{index}) #{name} #{func.source_location.join(":")}"
+    "\n#{string}"
   end
 
   def inspect_row(index, name)

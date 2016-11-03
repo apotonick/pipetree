@@ -18,4 +18,26 @@ module Pipetree::Flow::Inspect
   def inspect_row(index, name)
     "#{index} #{name.last}#{name.first}"
   end
+
+  def inspect_rows(names)
+    string = names.collect do |i, (name, operator)|
+
+      op = "#{operator}#{name}"
+      padding = 38
+
+      proc = if operator == "<"
+        sprintf("%- #{padding}s", op)
+      elsif [">", ">>", "&"].include?(operator.to_s)
+        sprintf("% #{padding}s", op)
+      else
+        pad = " " * ((padding - op.length) / 2)
+        "#{pad}#{op}#{pad}"
+      end
+
+      proc = proc.gsub(" ", "=")
+
+      sprintf("%2d %s", i, proc)
+    end.join("\n")
+    "\n#{string}"
+  end
 end

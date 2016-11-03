@@ -35,8 +35,8 @@ class FlowTest < Minitest::Spec
   #   end
   # end
 
-  A = ->(*) {  }
-  B = ->(*) {  }
+  Aaa = ->(*) {  }
+  B   = ->(*) {  }
 
   let (:pipe) { pipe = Pipetree::Flow[]
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
@@ -103,22 +103,28 @@ class FlowTest < Minitest::Spec
 
   #---
   # #inspect
-  describe "#inspect" do
-    let (:pipe) { Pipetree::Flow[].&(A).<(B).%(A) }
+  Seventeen = ->(*) { snippet }
+  Long      = ->(*) { snippet }
 
-    it { pipe.inspect.must_equal %{[&A,<B,%A]} }
+  describe "#inspect" do
+    let (:pipe) { Pipetree::Flow[].&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long) }
+
+    it { pipe.inspect.must_equal %{[&Aaa,>>Long,<B,%Aaa,<Seventeen,>Long]} }
 
     it { pipe.inspect(style: :rows).must_equal %{
- 0 &A
- 1 <B
- 2 %A} }
+ 0 ==================================&Aaa
+ 1 ================================>>Long
+ 2 <B====================================
+ 3 =================%Aaa=================
+ 4 <Seventeen============================
+ 5 =================================>Long} }
   end
 
   describe "#index" do
-    let (:pipe) { Pipetree::Flow[].&(A).<(B).%(A) }
+    let (:pipe) { Pipetree::Flow[].&(Aaa).<(B).%(Aaa) }
 
     it { pipe.index(B).must_equal 1 }
-    it { pipe.index(A).must_equal 0 }
+    it { pipe.index(Aaa).must_equal 0 }
   end
 end
 
