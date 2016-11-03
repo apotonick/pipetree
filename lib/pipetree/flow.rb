@@ -36,8 +36,8 @@ class Pipetree < Array
         options = { append: true } if options.empty? || options.keys == [:name]
 
         insert!(step, options).tap do
-          @debug ||= {}
-          @debug[step] = Inspect::Proc.new(name, proc, operator)
+          @step2proc ||= {}
+          @step2proc[step] = Inspect::Proc.new(name, proc, operator)
         end
       end
     end
@@ -53,12 +53,12 @@ class Pipetree < Array
       end
     end
 
-    def index(step) # @debug maps the original user's step proc to the On instance (or any kind of wrapper proc).
+    def index(step) # @step2proc maps the original user's step proc to the On instance (or any kind of wrapper proc).
       if step.is_a?(String)
-        return @debug.find { |on, inspect_proc| inspect_proc.name == step and return super(on) }
+        return @step2proc.find { |on, inspect_proc| inspect_proc.name == step and return super(on) }
       end
 
-      @debug.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
+      @step2proc.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
     end
 
     # Directions emitted by steps.

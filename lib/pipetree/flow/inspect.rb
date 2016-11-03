@@ -6,8 +6,8 @@ module Pipetree::Flow::Inspect
   Proc = Struct.new(:name, :proc, :operator)
 
   def inspect_for(step)
-    debug = @debug[step]
-    [debug.name || super(debug.proc), debug.operator]
+    cfg = @step2proc[step]
+    [cfg.name || super(cfg.proc), cfg.operator]
   end
 
   def inspect_line(names)
