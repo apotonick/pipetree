@@ -28,14 +28,17 @@ module Pipetree::Function
     end
 
     def delete!(arr, removed_func)
-      arr.delete(removed_func)
+      index = arr.index(removed_func)
+      arr.delete_at(index)
 
       # TODO: make nice.
-      arr.each_with_index { |func, index|
-        if func.is_a?(Collect)
-          arr[index] = Collect[*Pipeline::Insert.(func, removed_func, delete: true)]
-        end
-      }
+      # arr.each_with_index { |func, index|
+      #   if func.is_a?(Collect)
+      #     arr[index] = Collect[*Pipeline::Insert.(func, removed_func, delete: true)]
+      #   end
+      # }
+
+      arr
     end
 
     # TODO: not nested.

@@ -40,6 +40,7 @@ class FlowInsertTest < Minitest::Spec
   it { pipe = Pipetree::Flow[].>(A).>(C, append: true).inspect.must_equal %{[>A,>C]} }
   it { pipe = Pipetree::Flow[].>(A).>(C, prepend: true).inspect.must_equal %{[>C,>A]} }
   it { pipe = Pipetree::Flow[].>(A).>(C, replace: A).inspect.must_equal %{[>C]} }
+  it { pipe = Pipetree::Flow[].>(A)._insert(A, {delete: true}, nil, nil).inspect.must_equal %{[]} }
 
   # FIXME: add :delete and :replace.
 end
