@@ -54,7 +54,10 @@ class Pipetree < Array
     end
 
     def index(step) # @debug maps the original user's step proc to the On instance (or any kind of wrapper proc).
-      puts "@@@@@ #{step.inspect}"
+      if step.is_a?(String)
+        return @debug.find { |on, inspect_proc| inspect_proc.name == step and return super(on) }
+      end
+
       @debug.find { |on, inspect_proc| inspect_proc.proc == step and return super(on) }
     end
 

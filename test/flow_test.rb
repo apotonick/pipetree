@@ -121,10 +121,12 @@ class FlowTest < Minitest::Spec
   end
 
   describe "#index" do
-    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa) }
+    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa, name: "a.triple") }
 
     it { pipe.index(B).must_equal 1 }
     it { pipe.index(Aaa).must_equal 0 }
+    # with alias
+    it { pipe.index("a.triple").must_equal 2 }
   end
 
   #---
@@ -141,7 +143,7 @@ class FlowTest < Minitest::Spec
  1 ===============================>pipe.b
  2 =========================>pipe.aaa.aaa}
 
-    pipe.>(Long, after: "pipe.b").inspect.must_equal %{}
+    pipe.>(Long, after: "pipe.b").inspect.must_equal %{[>pipe.aaa,>pipe.b,>Long,>pipe.aaa.aaa]}
   end
 end
 
