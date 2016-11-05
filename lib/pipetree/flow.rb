@@ -31,13 +31,13 @@ class Pipetree < Array
 
       # :private:
       # proc is the original step proc, e.g. Validate.
-      def _insert(step, options, proc, operator)
+      def _insert(step, options, original_proc, operator)
         name = options[:name]
         options = { append: true } if options.empty? || options.keys == [:name]
 
         insert!(step, options).tap do
           @step2proc ||= {}
-          @step2proc[step] = Inspect::Proc.new(name, proc, operator)
+          @step2proc[step] = Inspect::Proc.new(name, original_proc, operator)
         end
       end
 
