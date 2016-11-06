@@ -146,7 +146,6 @@ class FlowTest < Minitest::Spec
     pipe.>(Long, after: "pipe.b").inspect.must_equal %{[>pipe.aaa,>pipe.b,>Long,>pipe.aaa.aaa]}
   end
 
-
   #---
   # test decompose array
   it do
