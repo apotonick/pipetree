@@ -145,6 +145,19 @@ class FlowTest < Minitest::Spec
 
     pipe.>(Long, after: "pipe.b").inspect.must_equal %{[>pipe.aaa,>pipe.b,>Long,>pipe.aaa.aaa]}
   end
+
+
+  #---
+  # test decompose array
+  it do
+    pipe = Pipetree::Flow.new.
+      >>( ->(input, options) { [options[:key], input] } ).    # passes [bla, input] as input.
+      &( ->((value, input), options) { input["x"] = value } ) # decomposes input.
+
+    pipe.(input={}, options={key: 1}).must_equal [Pipetree::Flow::Right, [1, {"x"=>1}]]
+    input.inspect.must_equal %{{"x"=>1}}
+    options.inspect.must_equal %{{:key=>1}}
+  end
 end
 
 # TODO: instead of testing #index, test all options like :before, etc.
