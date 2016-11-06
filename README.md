@@ -16,6 +16,15 @@ Instead of implementing the perfect API where users can override methods, call `
 
 This is way less tedious than climbing through `super` calls and callstacks.
 
+## Installation
+
+In your `Gemfile`.
+
+```ruby
+gem "pipetree"
+```
+
+Pipetree runs with Ruby >= 1.9.3.
 
 ## TODO
 

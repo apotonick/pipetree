@@ -2,6 +2,7 @@ class Pipetree < Array
   class Flow < Array # yes, we could inherit, and so on.
     require "pipetree/flow/inspect"
     include Inspect
+    require "pipetree/flow/step_map"
 
     module Operators
       # Optimize the most common steps with Stay/And objects that are faster than procs.
@@ -36,15 +37,17 @@ class Pipetree < Array
         options = { append: true } if options.empty? || options.keys == [:name]
 
         insert!(step, options).tap do
-          @step2proc ||= {}
-          @step2proc[step] = Inspect::Proc.new(name, original_proc, operator)
+          @step2proc ||= StepMap.new
+          @step2proc[step] = name, original_proc, operator
         end
       end
 
+      require "pipetree/ruby_1.9.3"
+      include Index193 if RUBY_VERSION == "1.9.3"
+
       # :private:
-      def index(step) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
-        method = step.is_a?(String) ? :name : :proc
-        @step2proc.find { |on, inspect_proc| inspect_proc.send(method) == step and return super(on) }
+      def index(proc) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
+        on = @step2proc.find_proc(proc) and return super(on)
       end
     end
     include Operators

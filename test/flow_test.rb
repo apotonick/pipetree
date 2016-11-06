@@ -159,4 +159,25 @@ class FlowTest < Minitest::Spec
   end
 end
 
+#- StepMap
+class StepMapTest < Minitest::Spec
+  it do
+    map = Pipetree::Flow::StepMap.new
+
+    original_proc = ->(*) { snippet }
+    step          = ->(*) { original_proc }
+
+    original_proc2 = ->(*) { snippet }
+    step2          = ->(*) { original_proc2 }
+
+    map[step]  = "my.step", original_proc, ">"
+    map[step2] = "my.step2", original_proc2, ">"
+
+    map.find_proc(original_proc).must_equal step
+    map.find_proc("my.step").must_equal step
+    map.find_proc(original_proc2).must_equal step2
+    map.find_proc("my.step2").must_equal step2
+  end
+end
+
 # TODO: instead of testing #index, test all options like :before, etc.
