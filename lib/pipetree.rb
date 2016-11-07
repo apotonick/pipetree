@@ -30,9 +30,6 @@ private
   require "pipetree/insert"
   include Macros
 
-  require "pipetree/ruby_1.9.3"
-  include Index193 if RUBY_VERSION == "1.9.3"
-
   # Collect applies a pipeline to each element of input.
   class Collect < self
     # when stop, the element is skipped. (should that be Skip then?)

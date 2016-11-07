@@ -42,9 +42,6 @@ class Pipetree < Array
         end
       end
 
-      require "pipetree/ruby_1.9.3"
-      include Index193 if RUBY_VERSION == "1.9.3"
-
       # :private:
       def index(proc) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
         on = @step2proc.find_proc(proc) and return super(on)

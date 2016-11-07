@@ -1,9 +1,9 @@
 require "test_helper"
 
 class AlteringTest < Minitest::Spec
-  A = ->(*) { }
+  A = ->(*) { "bla ruby 1.9 needs that" }
   B = ->(*) { }
-  C = ->(*) { }
+  C = ->(*) { "otherwise it'll confuse empty procs" }
 
   # constructor.
   it do

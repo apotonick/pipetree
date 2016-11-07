@@ -35,7 +35,7 @@ class FlowTest < Minitest::Spec
   #   end
   # end
 
-  Aaa = ->(*) {  }
+  Aaa = ->(*) { "yo" }
   B   = ->(*) {  }
 
   let (:pipe) { pipe = Pipetree::Flow.new
