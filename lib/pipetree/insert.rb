@@ -2,12 +2,10 @@ module Pipetree::Function
   class Insert
     def call(arr, func, options)
       # arr = arr.dup
-      return delete!(arr, func) if options[:delete]
-      return replace!(arr, options[:replace], func) if options[:replace]
-      return before!(arr, options[:before], func)   if options[:before]
-      return after!(arr, options[:after], func)   if options[:after]
-      return append!(arr, options[:append], func)   if options[:append]
-      return prepend!(arr, options[:prepend], func)   if options[:prepend]
+      operations = [:delete, :replace, :before, :after, :append, :prepend]
+
+      # replace!(arr, options[:replace], func)
+      options.keys.reverse.each { |k| operations.include?(k) and return send("#{k}!", arr, options[k], func) }
 
       raise "[Pipetree] Unknown command #{options.inspect}" # TODO: test.
       # arr
@@ -27,7 +25,7 @@ module Pipetree::Function
       arr
     end
 
-    def delete!(arr, removed_func)
+    def delete!(arr, _, removed_func)
       index = arr.index(removed_func)
       arr.delete_at(index)
 

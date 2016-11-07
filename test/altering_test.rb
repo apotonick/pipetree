@@ -26,6 +26,9 @@ class AlteringTest < Minitest::Spec
 
   it { Pipetree[A,B].insert!(C, prepend: true).inspect.must_equal %{[C|>A|>B]} }
   it { Pipetree[].insert!(C, prepend: true).inspect.must_equal %{[C]} }
+
+  # last option wins
+  it { Pipetree[A,B].insert!(C, after: B, prepend: true).inspect.must_equal %{[C|>A|>B]} }
 end
 
 require "pipetree/flow"
@@ -41,6 +44,5 @@ class FlowInsertTest < Minitest::Spec
   it { pipe = Pipetree::Flow[].>(A).>(C, prepend: true).inspect.must_equal %{[>C,>A]} }
   it { pipe = Pipetree::Flow[].>(A).>(C, replace: A).inspect.must_equal %{[>C]} }
   it { pipe = Pipetree::Flow[].>(A)._insert(A, {delete: true}, nil, nil).inspect.must_equal %{[]} }
-
   # FIXME: add :delete and :replace.
 end
