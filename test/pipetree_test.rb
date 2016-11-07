@@ -71,6 +71,17 @@ class PipelineTest < MiniTest::Spec
     Pipetree[First, Second].("", options={}, memory={})
   end
 
+  #---
+  #- #index
+  it do
+    A = ->(*) { snippet }
+    B = ->(*) { snippet }
+
+    pipe = Pipetree[A, B]
+    pipe.index(A).must_equal 0
+    pipe.index(B).must_equal 1
+  end
+
 #   ######### collection :ratings
 
 #   let (:ratings) {
