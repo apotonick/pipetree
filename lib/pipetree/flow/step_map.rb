@@ -1,4 +1,6 @@
 # Map original proc or its name to the wrapped On.
+# This class is solely dedicated for inspect and insert operations, and not
+# involved at run-time at all.
 class Pipetree::Flow::StepMap
   def initialize
     @hash = {}
