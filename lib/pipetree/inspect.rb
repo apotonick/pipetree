@@ -3,7 +3,7 @@ module Pipetree::Inspect
   # TODO: remove in Representable::Debug.
   def inspect(options={ style: :line })
     names = each_with_index.collect do |func, i|
-      [i, inspect_for(func)]
+      [i, inspect_func(func)]
     end
 
     return inspect_line(names) if options[:style] == :line
@@ -11,8 +11,17 @@ module Pipetree::Inspect
   end
 
   # open source file to retrieve the constant name.
-  def inspect_for(func)
-    File.readlines(func.source_location[0])[func.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]
+  def inspect_func(func)
+    return inspect_object(func) unless func.is_a?(Proc)
+    inspect_proc(func)
+  end
+
+  def inspect_object(obj)
+    obj.inspect.sub(/0x\w+/, "")
+  end
+
+  def inspect_proc(proc)
+    File.readlines(proc.source_location[0])[proc.source_location[1]-1].match(/^\s+([\w\:]+)/)[1]
   end
 
   def inspect_line(names)

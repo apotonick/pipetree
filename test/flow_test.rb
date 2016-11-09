@@ -105,11 +105,12 @@ class FlowTest < Minitest::Spec
   # #inspect
   Seventeen = ->(*) { snippet }
   Long      = ->(*) { snippet }
+  Callable  = Object.new # random callable object.
 
   describe "#inspect" do
-    let (:pipe) { Pipetree::Flow.new.&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long) }
+    let (:pipe) { Pipetree::Flow.new.&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long).>(Callable) }
 
-    it { pipe.inspect.must_equal %{[&Aaa,>>Long,<B,%Aaa,<Seventeen,>Long]} }
+    it { pipe.inspect.must_equal %{[&Aaa,>>Long,<B,%Aaa,<Seventeen,>Long,>#<Object:>]} }
 
     it { pipe.inspect(style: :rows).must_equal %{
  0 ==================================&Aaa
@@ -117,7 +118,8 @@ class FlowTest < Minitest::Spec
  2 <B====================================
  3 =================%Aaa=================
  4 <Seventeen============================
- 5 =================================>Long} }
+ 5 =================================>Long
+ 6 ===========================>#<Object:>} }
   end
 
   describe "#index" do

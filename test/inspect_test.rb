@@ -6,8 +6,9 @@ class InspectTest < Minitest::Spec
 
   M::AlphaConstant = ->(*) { }
   M::Beta          = ->(*) { }
+  Callable         = Object.new
 
-  let (:pipe) { ::Pipetree[M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta] }
+  let (:pipe) { ::Pipetree[M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, M::AlphaConstant, M::Beta, Callable] }
 
   it do
     puts pipe.inspect
@@ -25,9 +26,10 @@ class InspectTest < Minitest::Spec
  7|>M::AlphaConstant
  8|>M::Beta
  9|>M::AlphaConstant
-10|>M::Beta}
+10|>M::Beta
+11|>#<Object:>}
   end
 
   # different separator
-  it { ::Pipetree[M::AlphaConstant,M::Beta].inspect.must_equal %{[M::AlphaConstant|>M::Beta]} }
+  it { ::Pipetree[M::AlphaConstant,M::Beta,Callable].inspect.must_equal %{[M::AlphaConstant|>M::Beta|>#<Object:>]} }
 end
