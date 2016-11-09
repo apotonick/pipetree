@@ -3,6 +3,7 @@ class Pipetree < Array
     require "pipetree/flow/inspect"
     include Inspect
     require "pipetree/flow/step_map"
+    require "pipetree/insert"
 
     module Operators
       # Optimize the most common steps with Stay/And objects that are faster than procs.
@@ -93,16 +94,6 @@ class Pipetree < Array
       end
     end
 
-
-
-
-
-    require "pipetree/insert"
-    module Macros
-      def insert!(new_function, options)
-        Pipetree::Insert.(self, new_function, options)
-      end
-    end
-    include Macros # FIXME: we shouldn't expose #insert!
+    include Function::Insert::Macros # #insert!
   end
 end

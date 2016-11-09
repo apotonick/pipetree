@@ -57,6 +57,12 @@ module Pipetree::Function
     def prepend!(arr, old_func, new_func)
       arr.unshift(new_func)
     end
+
+    module Macros
+      def insert!(new_function, options)
+        Pipetree::Insert.(self, new_function, options)
+      end
+    end
   end
 end
 

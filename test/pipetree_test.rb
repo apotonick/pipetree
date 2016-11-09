@@ -158,6 +158,8 @@ class PipelineTest < MiniTest::Spec
 
 #     it "replaces if exists" do
 #       # pipeline.insert!(R::Default, replace: R::StopOnSkipable)
+
+
 #       P::Insert.(pipeline, R::Default, replace: R::StopOnSkipable).must_equal P[R::GetValue, R::Default, R::StopOnNil]
 #       pipeline.must_equal P[R::GetValue, R::StopOnSkipable, R::StopOnNil]
 #     end
