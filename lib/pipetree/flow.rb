@@ -5,6 +5,13 @@ class Pipetree < Array
     require "pipetree/flow/step_map"
     require "pipetree/insert"
 
+    def initialize(*)
+      super
+      @step2proc = StepMap.new
+    end
+
+    # TODO: don't inherit from Array, because we don't want Array[].
+
     module Operators
       # Optimize the most common steps with Stay/And objects that are faster than procs.
       def <(proc, options={})
@@ -37,7 +44,6 @@ class Pipetree < Array
         options = { append: true }.merge(options)
 
         insert!(step, options).tap do
-          @step2proc ||= StepMap.new
           @step2proc[step] = options[:name], original_proc, operator
         end
       end

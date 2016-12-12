@@ -74,7 +74,7 @@ class FlowTest < Minitest::Spec
   #---
   # return value is new input.
   it do
-    pipe = Pipetree::Flow[
+    pipe = Pipetree::Flow.new [
       Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { [Pipetree::Flow::Right, value.reverse] } )
     ]
     pipe.("Hello", {}).must_equal [Pipetree::Flow::Right, "olleH"]
@@ -129,6 +129,9 @@ class FlowTest < Minitest::Spec
     it { pipe.index(Aaa).must_equal 0 }
     # with alias
     it { pipe.index("a.triple").must_equal 2 }
+
+    # without steps
+    it { Pipetree::Flow.new.index(B).must_equal nil }
   end
 
   #---
