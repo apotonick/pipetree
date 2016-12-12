@@ -1,12 +1,12 @@
 class Pipetree < Array
-  class Flow < Array # yes, we could inherit, and so on.
+  class Flow
     require "pipetree/flow/inspect"
     include Inspect
     require "pipetree/flow/step_map"
     require "pipetree/insert"
 
-    def initialize(*)
-      super
+    def initialize(*args)
+      @steps     = Array.new(*args)
       @step2proc = StepMap.new
     end
 
@@ -46,12 +46,18 @@ class Pipetree < Array
         insert!(step, options).tap do
           @step2proc[step] = options[:name], original_proc, operator
         end
+
+        self
       end
 
       # :private:
       def index(proc) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
-        on = @step2proc.find_proc(proc) and return super(on)
+        on = @step2proc.find_proc(proc) and return @steps.index(on)
       end
+
+      require "uber/delegates"
+      extend Uber::Delegates
+      delegates :@steps, :<<, :each_with_index, :[]=, :delete_at, :insert, :unshift # FIXME: make Insert properly decoupled!
     end
     include Operators
 
@@ -59,7 +65,7 @@ class Pipetree < Array
     def call(input, options)
       input = [Right, input]
 
-      inject(input) do |memooo, step|
+      @steps.inject(input) do |memooo, step|
         last, memo = memooo
         step.call(last, memo, options)
       end
