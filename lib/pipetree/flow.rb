@@ -65,8 +65,7 @@ class Pipetree < Array
     def call(input, options)
       input = [Right, input]
 
-      @steps.inject(input) do |memooo, step|
-        last, memo = memooo
+      @steps.inject(input) do |(last, memo), step|
         step.call(last, memo, options)
       end
     end
