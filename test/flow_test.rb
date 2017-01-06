@@ -26,6 +26,40 @@ require "pipetree/flow"
 require "json"
 
 class FlowTest < Minitest::Spec
+  F = Pipetree::Flow
+
+  describe "#add" do
+    let (:pipe) do
+      pipe = F.new
+
+      #       add: (track, proc)
+      # macro returns [signal, input]: (can be added to pipe via #add)
+      step_1 = F::And.new(->(input, options) { options["x"] = true })
+      step_2 = F::And.new(->(input, options) { input })
+      step_3 = F::And.new(->(input, options) { options["step_3"] = true })
+
+      fail_1 = F::Stay.new(->(input, options) { options["fail_1"] = true })
+      fail_2 = F::And.new(->(input, options) { options["fail_2"] = true }, on_true: left_1, on_false: F::Left)
+      fail_3 = F::Stay.new(->(input, options) { options["fail_3"] = true })
+
+
+      pipe.add(F::Right, step_1)
+      pipe.add(F::Right, step_2)
+      pipe.add(F::Left, fail_1)
+      pipe.add(F::Left, fail_2)
+      pipe.add(F::Left, fail_3)
+      pipe.add(F::Right, step_3)
+    end
+
+    let (:left_1) { Class.new(F::Left) }
+
+    # only right
+    it { [pipe.(true, options={}), options].must_equal [[F::Right, true], {"x"=>true, "step_3"=>true}] }
+    # jumps to left at step_2
+    it { [pipe.(false, options={}), options].must_equal [[left_1, false], {"x"=>true, "fail_1"=>true, "fail_2"=>true}] }
+  end
+  # TODO: test name:, etc. for #add
+
   # TODO: test each function from & to > is only called once!
   # describe "#call" do
   #   let (:pipe) { Pipetree::Flow.new }

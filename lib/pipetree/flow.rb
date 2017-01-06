@@ -18,7 +18,6 @@ class Pipetree < Array
         _insert On.new(Left, Stay.new(proc)), options, proc, "<"
       end
 
-      # OnRight-> ? Right, input : Left, input
       def &(proc, options={})
         _insert On.new(Right, And.new(proc)), options, proc, "&"
       end
@@ -36,6 +35,10 @@ class Pipetree < Array
       def %(proc, options={})
         # no condition is needed, and we want to stay on the same track, too.
         _insert Stay.new(proc), options, proc, "%"
+      end
+
+      def add(track, step)
+        _insert On.new(track, step), {}, step, "blaaa"
       end
 
       # :private:
@@ -76,24 +79,26 @@ class Pipetree < Array
 
     # Incoming direction must be Left/Right.
     class On
-      def initialize(direction, proc)
-        @direction, @proc = direction, proc
+      def initialize(track, proc)
+        @track, @proc = track, proc
       end
 
       def call(last, input, options)
-        return [last, input] unless last == @direction # return unless incoming direction is Right (or Left).
+        return [last, input] unless last == @track # return unless incoming track is Right (or Left).
         @proc.(last, input, options)
       end
     end
 
     # Call step proc and return (Right || Left).
     class And
-      def initialize(proc)
-        @proc = proc
+      def initialize(proc, options={})
+        @proc     = proc
+        @on_true  = options[:on_true]  || Right
+        @on_false = options[:on_false] || Left
       end
 
       def call(last, input, options)
-        @proc.(input, options) ? [Right, input] : [Left,  input]
+        @proc.(input, options) ? [@on_true, input] : [@on_false,  input]
       end
     end
 
