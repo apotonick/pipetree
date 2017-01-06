@@ -37,8 +37,8 @@ class Pipetree < Array
         _insert Stay.new(proc), options, proc, "%"
       end
 
-      def add(track, step)
-        _insert On.new(track, step), {}, step, "blaaa"
+      def add(track, step, options={}, operator="")
+        _insert On.new(track, step), options, step, operator
       end
 
       # :private:

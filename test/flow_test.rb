@@ -57,6 +57,13 @@ class FlowTest < Minitest::Spec
     it { [pipe.(true, options={}), options].must_equal [[F::Right, true], {"x"=>true, "step_3"=>true}] }
     # jumps to left at step_2
     it { [pipe.(false, options={}), options].must_equal [[left_1, false], {"x"=>true, "fail_1"=>true, "fail_2"=>true}] }
+
+    it do
+      F.new
+        .add(F::Right, Object, name: "operation.new")
+        .add(F::Right, Module, name: "nested.create", before: "operation.new")
+        .inspect.must_equal %{[nested.create,operation.new]}
+    end
   end
   # TODO: test name:, etc. for #add
 
