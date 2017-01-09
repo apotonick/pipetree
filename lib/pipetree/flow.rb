@@ -27,18 +27,13 @@ class Pipetree < Array
         _insert On.new(Right, Stay.new(proc)), options, proc, ">"
       end
 
-      def >>(proc, options={})
-        _insert On.new(Right,
-          ->(last, input, options) { [Right, proc.(input, options)] } ), options, proc, ">>"
-      end
-
       def %(proc, options={})
         # no condition is needed, and we want to stay on the same track, too.
         _insert Stay.new(proc), options, proc, "%"
       end
 
-      def add(track, step, options={}, operator="")
-        _insert On.new(track, step), options, step, operator
+      def add(track, strut, options={}, operator="")
+        _insert On.new(track, strut), options, strut, operator
       end
 
       # :private:
@@ -106,7 +101,7 @@ class Pipetree < Array
     class Stay < And
       def call(last, input, options)
         @proc.(input, options)
-        [last, input] # simply pass through the current direction: either [Left, input] or [Right, input].
+        [last, input] # simply pass through the current direction: e.g. [Left, input] or [Right, input].
       end
     end
 

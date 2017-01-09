@@ -58,6 +58,8 @@ class FlowTest < Minitest::Spec
     # jumps to left at step_2
     it { [pipe.(false, options={}), options].must_equal [[left_1, false], {"x"=>true, "fail_1"=>true, "fail_2"=>true}] }
 
+    # options for #add
+    # chainability of #add.
     it do
       F.new
         .add(F::Right, Object, name: "operation.new")
@@ -133,15 +135,6 @@ class FlowTest < Minitest::Spec
      }
   end
 
-  # #>>
-  describe "#>>" do
-    let (:pipe) { Pipetree::Flow.new }
-    it {
-      pipe.>> ->(input, options) { input.reverse }
-      pipe.("Hallo", {}).must_equal [Pipetree::Flow::Right, "ollaH"]
-     }
-  end
-
   #---
   # #inspect
   Seventeen = ->(*) { snippet }
@@ -149,18 +142,17 @@ class FlowTest < Minitest::Spec
   Callable  = Object.new # random callable object.
 
   describe "#inspect" do
-    let (:pipe) { Pipetree::Flow.new.&(Aaa).>>(Long).<(B).%(Aaa).<(Seventeen).>(Long).>(Callable) }
+    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa).<(Seventeen).>(Long).>(Callable) }
 
-    it { pipe.inspect.must_equal %{[&Aaa,>>Long,<B,%Aaa,<Seventeen,>Long,>#<Object:>]} }
+    it { pipe.inspect.must_equal %{[&Aaa,<B,%Aaa,<Seventeen,>Long,>#<Object:>]} }
 
     it { pipe.inspect(style: :rows).must_equal %{
  0 ==================================&Aaa
- 1 ================================>>Long
- 2 <B====================================
- 3 =================%Aaa=================
- 4 <Seventeen============================
- 5 =================================>Long
- 6 ===========================>#<Object:>} }
+ 1 <B====================================
+ 2 =================%Aaa=================
+ 3 <Seventeen============================
+ 4 =================================>Long
+ 5 ===========================>#<Object:>} }
   end
 
   describe "#index" do
@@ -196,10 +188,12 @@ class FlowTest < Minitest::Spec
   # test decompose array
   it do
     pipe = Pipetree::Flow.new.
-      >>( ->(input, options) { [options[:key], input] } ).    # passes [bla, input] as input.
       &( ->((value, input), options) { input["x"] = value } ) # decomposes input.
 
-    pipe.(input={}, options={key: 1}).must_equal [Pipetree::Flow::Right, [1, {"x"=>1}]]
+    options={key: 1}
+    input = {}
+
+    pipe.([options[:key], input], options).must_equal [Pipetree::Flow::Right, [1, {"x"=>1}]]
     input.inspect.must_equal %{{"x"=>1}}
     options.inspect.must_equal %{{:key=>1}}
   end
