@@ -22,7 +22,6 @@ class Pipetree < Array
         _insert On.new(Right, And.new(proc)), options, proc, "&"
       end
 
-      # TODO: test me.
       def >(proc, options={})
         _insert On.new(Right, Stay.new(proc)), options, proc, ">"
       end
@@ -68,11 +67,13 @@ class Pipetree < Array
       end
     end
 
-    # Directions emitted by steps.
-    Left  = Class.new
-    Right = Class.new
+    # Tracks emitted by steps.
+    Track = Class.new
+    Left  = Class.new(Track)
+    Right = Class.new(Track)
 
     # Incoming direction must be Left/Right.
+    # Struts
     class On
       def initialize(track, proc)
         @track, @proc = track, proc
