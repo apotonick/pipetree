@@ -85,25 +85,33 @@ class Pipetree < Array
       end
     end
 
-    # Call step proc and return (Right || Left).
-    class And
-      def initialize(proc, options={})
-        @proc     = proc
-        @on_true  = options[:on_true]  || Right
-        @on_false = options[:on_false] || Left
+    class Tie
+      def initialize(proc, config={})
+        @proc    = proc
+        @config  = config
       end
 
       def call(last, input, options)
-        @proc.(input, options) ? [@on_true, input] : [@on_false,  input]
+        result = @proc.(input, options) # call the actual step.
+
+        [self.class::Decider.(result, @config, last, input, options), input] # decide about the track and return Flow-compliant response.
+      end
+    end
+
+    # Call step proc and return (Right || Left).
+    class And < Tie
+      # Deciders return the new track.
+      Decider = ->(result, config, *) do
+        result ?
+          config[:on_true]  || Right :
+          config[:on_false] || Left
       end
     end
 
     # Call step proc and return incoming last step.
-    class Stay < And
-      def call(last, input, options)
-        @proc.(input, options)
-        [last, input] # simply pass through the current direction: e.g. [Left, input] or [Right, input].
-      end
+    class Stay < Tie
+      # simply pass through the current direction: e.g. Left or Right.
+      Decider = ->(result, cfg, last, *) { last }
     end
 
     include Function::Insert::Macros # #insert!
