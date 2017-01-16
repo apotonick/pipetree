@@ -20,6 +20,11 @@ class Pipetree
       end
     end
 
+    # Naming:
+    # * Track
+    # * Tie: the callable that's usually an On instance and is sitting directly in the pipe.
+    # * Strut: the callable that's wrapped by the Tie and implements the decider logic (e.g. And).
+    # * Step: the user callable with interface `Step.(input, options)`.
     module Add
       def add(track, strut, options={})
         _insert On.new(track, strut), options, track, strut
@@ -53,7 +58,7 @@ class Pipetree
     Right = Class.new(Track)
 
     # Incoming direction must be Left/Right.
-    # Struts
+    # Tie
     class On
       def initialize(track, proc)
         @track, @proc = track, proc
@@ -65,7 +70,7 @@ class Pipetree
       end
     end
 
-    class Tie
+    class Strut
       def initialize(proc, config={})
         @proc    = proc
         @config  = config
@@ -79,7 +84,7 @@ class Pipetree
     end
 
     # Call step proc and return (Right || Left).
-    class And < Tie
+    class And < Strut
       # Deciders return the new track.
       Decider = ->(result, config, *) do
         result ?
@@ -89,7 +94,7 @@ class Pipetree
     end
 
     # Call step proc and return incoming last step.
-    class Stay < Tie
+    class Stay < Strut
       # simply pass through the current direction: e.g. Left or Right.
       Decider = ->(result, cfg, last, *) { last }
     end
