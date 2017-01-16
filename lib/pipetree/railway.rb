@@ -37,7 +37,7 @@ class Pipetree
 
     private
       def _insert(tie, options, track, strut)
-        insert_operation = (::Pipetree::Function::Insert::Operations & options.keys).first || :append
+        insert_operation = (options.keys & ::Pipetree::Function::Insert::Operations).last || :append
 
         old_tie = @index[ options[insert_operation] ] # name --> tie
 

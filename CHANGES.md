@@ -1,5 +1,6 @@
-# 0.0.6
+# 0.1.0
 
+* Rename `Flow` to `Railway`.
 * All "operators" like `Flow#&` are now optional in `Operator` and considered experimental. Single entry point to adding steps is `Flow#add`.
 * Remove `Flow#>>`.
 * Add `Flow#add` which allows a low-level *tie*, a step that sits directly on the track with incoming interface `(last, input, options)` and outgoing `[new_track, input]`.
