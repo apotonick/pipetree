@@ -1,48 +1,18 @@
 require "test_helper"
 
-class AlteringTest < Minitest::Spec
-  A = ->(*) { "bla ruby 1.9 needs that" }
-  B = ->(*) { }
-  C = ->(*) { "otherwise it'll confuse empty procs" }
-
-  # constructor.
-  it do
-    pipe = ::Pipetree[A, B]
-    pipe.inspect.must_equal %{[A|>B]}
-  end
-
-  it { Pipetree[].insert(0, B).inspect.must_equal %{[B]} }
-  it { Pipetree[].unshift(B).inspect.must_equal %{[B]} }
-  it { Pipetree[].unshift(B, A).inspect.must_equal %{[B|>A]} }
-
-  it { Pipetree[A,B].insert!(C, before: A).inspect.must_equal %{[C|>A|>B]} }
-  it { Pipetree[A,B].insert!(C, before: B).inspect.must_equal %{[A|>C|>B]} }
-
-  it { Pipetree[A,B].insert!(C, after: A).inspect.must_equal %{[A|>C|>B]} }
-  it { Pipetree[A,B].insert!(C, after: B).inspect.must_equal %{[A|>B|>C]} }
-
-  it { Pipetree[A,B].insert!(C, append: true).inspect.must_equal %{[A|>B|>C]} }
-  it { Pipetree[].insert!(C, append: true).inspect.must_equal %{[C]} }
-
-  it { Pipetree[A,B].insert!(C, prepend: true).inspect.must_equal %{[C|>A|>B]} }
-  it { Pipetree[].insert!(C, prepend: true).inspect.must_equal %{[C]} }
-
-  # last option wins
-  it { Pipetree[A,B].insert!(C, after: B, prepend: true).inspect.must_equal %{[C|>A|>B]} }
-end
-
 require "pipetree/flow"
 class FlowInsertTest < Minitest::Spec
   A = ->{ }
   B = ->{ }
   C = ->{ }
 
-  it { pipe = Pipetree::Flow.new.>(A).>(B).inspect.must_equal %{[>A,>B]} }
-  it { pipe = Pipetree::Flow.new.>(A).>(B, before: A).inspect.must_equal %{[>B,>A]} }
-  it { pipe = Pipetree::Flow.new.>(A).>(B).>(C, after: A).inspect.must_equal %{[>A,>C,>B]} }
-  it { pipe = Pipetree::Flow.new.>(A).>(C, append: true).inspect.must_equal %{[>A,>C]} }
-  it { pipe = Pipetree::Flow.new.>(A).>(C, prepend: true).inspect.must_equal %{[>C,>A]} }
-  it { pipe = Pipetree::Flow.new.>(A).>(C, replace: A).inspect.must_equal %{[>C]} }
-  it { pipe = Pipetree::Flow.new.>(A)._insert(A, {delete: true}, nil, nil).inspect.must_equal %{[]} }
-  # FIXME: add :delete and :replace.
+  let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator) }
+
+  it { pipe.>(A, name: :A).>(B, name: :B).inspect.must_equal %{[>A,>B]} }
+  it { pipe.>(A, name: :A).>(B, before: :A, name: :B).inspect.must_equal %{[>B,>A]} }
+  it { pipe.>(A, name: :A).>(B, name: :B).>(C, after: :A, name: :C).inspect.must_equal %{[>A,>C,>B]} }
+  it { pipe.>(A, name: "A").>(C, append: true, name: :C).inspect.must_equal %{[>A,>C]} }
+  it { pipe.>(A, name: :A).>(C, prepend: true, name:  "C").inspect.must_equal %{[>C,>A]} }
+  it { pipe.>(A, name: :A).>(C, replace: :A, name: :C).inspect.must_equal %{[>C]} }
+  it { pipe.>(A, name: :A).add(nil, :A, delete: :A).inspect.must_equal %{[]} }
 end

@@ -1,62 +1,15 @@
-class Pipetree < Array
+class Pipetree
   class Flow
-    require "pipetree/flow/inspect"
-    include Inspect
-    require "pipetree/flow/step_map"
     require "pipetree/insert"
+    require "pipetree/flow/operator"
 
     def initialize(*args)
-      @steps     = Array.new(*args)
-      @step2proc = StepMap.new
+      @steps = Array.new(*args)
+      @index = Hash.new
+      @inspect = Hash.new
     end
 
     # TODO: don't inherit from Array, because we don't want Array[].
-
-    module Operators
-      # Optimize the most common steps with Stay/And objects that are faster than procs.
-      def <(proc, options={})
-        _insert On.new(Left, Stay.new(proc)), options, proc, "<"
-      end
-
-      def &(proc, options={})
-        _insert On.new(Right, And.new(proc)), options, proc, "&"
-      end
-
-      def >(proc, options={})
-        _insert On.new(Right, Stay.new(proc)), options, proc, ">"
-      end
-
-      def %(proc, options={})
-        # no condition is needed, and we want to stay on the same track, too.
-        _insert Stay.new(proc), options, proc, "%"
-      end
-
-      def add(track, strut, options={}, operator="")
-        _insert On.new(track, strut), options, strut, operator
-      end
-
-      # :private:
-      # proc is the original step proc, e.g. Validate.
-      def _insert(step, options, original_proc, operator)
-        options = { append: true }.merge(options)
-
-        insert!(step, options).tap do
-          @step2proc[step] = options[:name], original_proc, operator
-        end
-
-        self
-      end
-
-      # :private:
-      def index(proc) # @step2proc: { <On @proc> => {proc: @proc, name: "trb.validate", operator: "&"} }
-        on = @step2proc.find_proc(proc) and return @steps.index(on)
-      end
-
-      require "uber/delegates"
-      extend Uber::Delegates
-      delegates :@steps, :<<, :each_with_index, :[]=, :delete_at, :insert, :unshift # FIXME: make Insert properly decoupled!
-    end
-    include Operators
 
     # Actual implementation of Pipetree:Flow. Yes, it's that simple!
     def call(input, options)
@@ -66,6 +19,33 @@ class Pipetree < Array
         step.call(last, memo, options)
       end
     end
+
+    module Add
+      def add(track, strut, options={})
+        _insert On.new(track, strut), options, track, strut
+      end
+
+      require "uber/delegates"
+      extend Uber::Delegates
+      # TODO: make Insert properly decoupled! it still relies on Array interface on pipe`.
+      delegates :@steps, :<<, :each_with_index, :[]=, :delete_at, :insert, :unshift, :index
+
+    private
+      def _insert(tie, options, track, strut)
+        insert_operation = (::Pipetree::Function::Insert::Operations & options.keys).first || :append
+
+        old_tie = @index[options[insert_operation]] # name --> tie
+
+        # todo: step, old_tie (e.g. for #delete!).
+        Insert.(self, insert_operation, old_tie, tie)
+
+        @index[options[:name]] = tie
+        @inspect[tie] = [ track, options[:name] ]
+
+        self
+      end
+    end
+    include Add
 
     # Tracks emitted by steps.
     Track = Class.new
@@ -114,6 +94,7 @@ class Pipetree < Array
       Decider = ->(result, cfg, last, *) { last }
     end
 
-    include Function::Insert::Macros # #insert!
+    require "pipetree/flow/inspect"
+    include Inspect
   end
 end

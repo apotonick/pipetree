@@ -3,24 +3,20 @@ require "pipetree/inspect"
 module Pipetree::Flow::Inspect
   include ::Pipetree::Inspect
 
-  Proc = Struct.new(:name, :proc, :operator)
-
   def inspect_func(step)
-    cfg = @step2proc[step]
-    [cfg.name || super(cfg.proc), cfg.operator]
+    @inspect[step]
   end
 
+  Operator = { Pipetree::Flow::Left => "<", Pipetree::Flow::Right => ">", }
+
   def inspect_line(names)
-    string = names.collect { |i, name| "#{name.last}#{name.first}" }.join(",")
+    string = names.collect { |i, (track, name)| "#{Operator[track]}#{name}" }.join(",")
     "[#{string}]"
   end
 
-  def inspect_row(index, name)
-    "#{index} #{name.last}#{name.first}"
-  end
-
   def inspect_rows(names)
-    string = names.collect do |i, (name, operator)|
+    string = names.collect do |i, (track, name)|
+      operator = Operator[track]
 
       op = "#{operator}#{name}"
       padding = 38

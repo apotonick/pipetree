@@ -1,13 +1,14 @@
 module Pipetree::Function
   class Insert
-    def call(arr, func, options)
+    Operations = [:delete, :replace, :before, :after, :append, :prepend]
+
+    # DISCUSS: all methods write to original array.
+    def call(arr, operation, *args)
       # arr = arr.dup
-      operations = [:delete, :replace, :before, :after, :append, :prepend]
+      raise "[Pipetree] Unknown Insert operation #{args.inspect}" unless Operations.include?(operation)
 
-      # replace!(arr, options[:replace], func)
-      options.keys.reverse.each { |k| operations.include?(k) and return send("#{k}!", arr, options[k], func) }
+      send("#{operation}!", arr, *args) # replace!(arr, Old, New)
 
-      raise "[Pipetree] Unknown command #{options.inspect}" # TODO: test.
       # arr
     end
 
@@ -25,16 +26,9 @@ module Pipetree::Function
       arr
     end
 
-    def delete!(arr, _, removed_func)
-      index = arr.index(removed_func)
+    def delete!(arr, old_func, *)
+      index = arr.index(old_func)
       arr.delete_at(index)
-
-      # TODO: make nice.
-      # arr.each_with_index { |func, index|
-      #   if func.is_a?(Collect)
-      #     arr[index] = Collect[*Pipeline::Insert.(func, removed_func, delete: true)]
-      #   end
-      # }
 
       arr
     end
@@ -57,15 +51,7 @@ module Pipetree::Function
     def prepend!(arr, old_func, new_func)
       arr.unshift(new_func)
     end
-
-    module Macros
-      def insert!(new_function, options)
-        Pipetree::Insert.(self, new_function, options)
-      end
-    end
   end
 end
 
 Pipetree::Insert = Pipetree::Function::Insert.new
-
-#FIXME: all methods write to original array.

@@ -1,28 +1,5 @@
 require "test_helper"
-
 require "pipetree/flow"
-
-# pipe = Pipetree[
-#   Pipetree::OnRight.new( ->(value, options) { #puts "|>DESERIALIZATION"
-#       value.nil? ? [Pipetree::Left, value] : [Pipetree::Right, value] } ),
-#   Pipetree::OnRight.new( ->(value, options) { #puts "|>VALIDATION"
-#       value[:ok?] ? [Pipetree::Right, value] : [Pipetree::Left, value] } ),
-#   Pipetree::OnRight.new( ->(value, options) { #puts "|>PERSISTENCE";
-#       value[:persist?] ? [Pipetree::Right, value] : [Pipetree::Left, value] } ),
-#   Pipetree::OnLeft.new( ->(value, options) { #puts "|| INVALID=CALLBACK";
-#       [Pipetree::Left, value] } ),
-#   Pipetree::OnRight.new( ->(value, options) { #puts "|>OK=CALLBACK";
-#       [Pipetree::Right, value] } ),
-#   Pipetree::OnLeft.new( ->(value, options) { #puts "|| SECOND-INVALID=CALLBACK";
-#       [Pipetree::Left, value] } ),
-
-#   Pipetree::OnLeft.new( ->(value, options) { #puts "|| FIXING IT=CALLBACK";
-#       [Pipetree::Right, value] } ),
-# ]
-
-# puts "Pipetree"
-# pipe.({ok?: true}, {})
-
 require "json"
 
 class FlowTest < Minitest::Spec
@@ -64,29 +41,19 @@ class FlowTest < Minitest::Spec
       F.new
         .add(F::Right, Object, name: "operation.new")
         .add(F::Right, Module, name: "nested.create", before: "operation.new")
-        .inspect.must_equal %{[nested.create,operation.new]}
+        .inspect.must_equal %{[>nested.create,>operation.new]}
     end
   end
-  # TODO: test name:, etc. for #add
-
-  # TODO: test each function from & to > is only called once!
-  # describe "#call" do
-  #   let (:pipe) { Pipetree::Flow.new }
-  #   it do
-  #     pipe.>> ->(*) { puts "snippet" }
-  #     pipe.({},{})
-  #   end
-  # end
 
   Aaa = ->(*) { "yo" }
   B   = ->(*) {  }
 
-  let (:pipe) { pipe = Pipetree::Flow.new
+  let (:pipe) { pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator)
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
     pipe.& ->(value, options) { options["deserializer.result"]["key2"] == 2 ? true : (options["contract.errors.2"]="screwd";false) }
     pipe.< ->(value, options) { options["after_deserialize.fail"]=true }
-    pipe.% ->(value, options) { options["meantime"] = true }
+    pipe.> ->(value, options) { options["meantime"] = true }
     pipe.< ->(value, options) { options["after_meantime.left?"]=true; false } # false is ignored.
 
   }
@@ -104,14 +71,14 @@ class FlowTest < Minitest::Spec
     options = {}
     pipe.(%{{"key": 2}}, options)#.must_equal ""
 
-    options.must_equal({"deserializer.result"=>{"key"=>2}, "contract.errors"=>false, "after_deserialize.fail"=>true, "meantime"=>true, "after_meantime.left?"=>true})
+    options.must_equal({"deserializer.result"=>{"key"=>2}, "contract.errors"=>false, "after_deserialize.fail"=>true, "after_meantime.left?"=>true})
   end
 
   it do
     options = {}
     pipe.(%{{"key": 1,"key2":null}}, options)#.must_equal ""
 
-    options.must_equal({"deserializer.result"=>{"key"=>1, "key2"=>nil}, "contract.errors.2"=>"screwd", "after_deserialize.fail"=>true, "meantime"=>true, "after_meantime.left?"=>true})
+    options.must_equal({"deserializer.result"=>{"key"=>1, "key2"=>nil}, "contract.errors.2"=>"screwd", "after_deserialize.fail"=>true, "after_meantime.left?"=>true})
   end
 
   #---
@@ -126,7 +93,7 @@ class FlowTest < Minitest::Spec
   #---
   # #>
   describe "#>" do
-    let (:pipe) { Pipetree::Flow.new }
+    let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator) }
     it {
       pipe.> ->(input, options) { input.reverse }
       # pipe.| B
@@ -142,35 +109,22 @@ class FlowTest < Minitest::Spec
   Callable  = Object.new # random callable object.
 
   describe "#inspect" do
-    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa).<(Seventeen).>(Long).>(Callable) }
+    let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator).&(Aaa, name: "Aaa").<(B, name: "B").<(Seventeen, name: "Seventeen").>(Long, name: "Long").>(Callable, name: "Callable") }
 
-    it { pipe.inspect.must_equal %{[&Aaa,<B,%Aaa,<Seventeen,>Long,>#<Object:>]} }
+    it { pipe.inspect.must_equal %{[>Aaa,<B,<Seventeen,>Long,>Callable]} }
 
     it { pipe.inspect(style: :rows).must_equal %{
- 0 ==================================&Aaa
+ 0 ==================================>Aaa
  1 <B====================================
- 2 =================%Aaa=================
- 3 <Seventeen============================
- 4 =================================>Long
- 5 ===========================>#<Object:>} }
-  end
-
-  describe "#index" do
-    let (:pipe) { Pipetree::Flow.new.&(Aaa).<(B).%(Aaa, name: "a.triple") }
-
-    it { pipe.index(B).must_equal 1 }
-    it { pipe.index(Aaa).must_equal 0 }
-    # with alias
-    it { pipe.index("a.triple").must_equal 2 }
-
-    # without steps
-    it { Pipetree::Flow.new.index(B).must_equal nil }
+ 2 <Seventeen============================
+ 3 =================================>Long
+ 4 =============================>Callable} }
   end
 
   #---
   # with aliases
   it do
-    pipe = Pipetree::Flow.new.
+    pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator).
       >(Aaa, name: "pipe.aaa").
       >(B, name: "pipe.b").
       >(Aaa, name: "pipe.aaa.aaa")
@@ -181,13 +135,13 @@ class FlowTest < Minitest::Spec
  1 ===============================>pipe.b
  2 =========================>pipe.aaa.aaa}
 
-    pipe.>(Long, after: "pipe.b").inspect.must_equal %{[>pipe.aaa,>pipe.b,>Long,>pipe.aaa.aaa]}
+    pipe.>(Long, after: "pipe.b", name: "Long").inspect.must_equal %{[>pipe.aaa,>pipe.b,>Long,>pipe.aaa.aaa]}
   end
 
   #---
   # test decompose array
   it do
-    pipe = Pipetree::Flow.new.
+    pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator).
       &( ->((value, input), options) { input["x"] = value } ) # decomposes input.
 
     options={key: 1}
@@ -196,27 +150,6 @@ class FlowTest < Minitest::Spec
     pipe.([options[:key], input], options).must_equal [Pipetree::Flow::Right, [1, {"x"=>1}]]
     input.inspect.must_equal %{{"x"=>1}}
     options.inspect.must_equal %{{:key=>1}}
-  end
-end
-
-#- StepMap
-class StepMapTest < Minitest::Spec
-  it do
-    map = Pipetree::Flow::StepMap.new
-
-    original_proc = ->(*) { snippet }
-    step          = ->(*) { original_proc }
-
-    original_proc2 = ->(*) { snippet }
-    step2          = ->(*) { original_proc2 }
-
-    map[step]  = "my.step", original_proc, ">"
-    map[step2] = "my.step2", original_proc2, ">"
-
-    map.find_proc(original_proc).must_equal step
-    map.find_proc("my.step").must_equal step
-    map.find_proc(original_proc2).must_equal step2
-    map.find_proc("my.step2").must_equal step2
   end
 end
 
