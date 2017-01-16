@@ -1,17 +1,17 @@
 class Pipetree
-  class Flow
+  class Railway
     require "pipetree/insert"
-    require "pipetree/flow/operator"
+    require "pipetree/railway/operator"
 
     def initialize(*args)
-      @steps = Array.new(*args)
-      @index = Hash.new
+      @steps   = Array.new(*args)
+      @index   = Hash.new
       @inspect = Hash.new
     end
 
     # TODO: don't inherit from Array, because we don't want Array[].
 
-    # Actual implementation of Pipetree:Flow. Yes, it's that simple!
+    # Actual implementation of Pipetree:Railway. Yes, it's that simple!
     def call(input, options)
       input = [Right, input]
 
@@ -34,7 +34,7 @@ class Pipetree
       def _insert(tie, options, track, strut)
         insert_operation = (::Pipetree::Function::Insert::Operations & options.keys).first || :append
 
-        old_tie = @index[options[insert_operation]] # name --> tie
+        old_tie = @index[ options[insert_operation] ] # name --> tie
 
         # todo: step, old_tie (e.g. for #delete!).
         Insert.(self, insert_operation, old_tie, tie)
@@ -94,7 +94,7 @@ class Pipetree
       Decider = ->(result, cfg, last, *) { last }
     end
 
-    require "pipetree/flow/inspect"
+    require "pipetree/railway/inspect"
     include Inspect
   end
 end

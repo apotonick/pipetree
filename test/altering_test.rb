@@ -1,12 +1,12 @@
 require "test_helper"
 
-require "pipetree/flow"
-class FlowInsertTest < Minitest::Spec
+require "pipetree/railway"
+class RailwayInsertTest < Minitest::Spec
   A = ->{ }
   B = ->{ }
   C = ->{ }
 
-  let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator) }
+  let (:pipe) { Pipetree::Railway.new.extend(Pipetree::Railway::Operator) }
 
   it { pipe.>(A, name: :A).>(B, name: :B).inspect.must_equal %{[>A,>B]} }
   it { pipe.>(A, name: :A).>(B, before: :A, name: :B).inspect.must_equal %{[>B,>A]} }

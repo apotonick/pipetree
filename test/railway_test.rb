@@ -1,9 +1,9 @@
 require "test_helper"
-require "pipetree/flow"
+require "pipetree/railway"
 require "json"
 
-class FlowTest < Minitest::Spec
-  F = Pipetree::Flow
+class RailwayTest < Minitest::Spec
+  F = Pipetree::Railway
 
   describe "#add" do
     let (:pipe) do
@@ -48,7 +48,7 @@ class FlowTest < Minitest::Spec
   Aaa = ->(*) { "yo" }
   B   = ->(*) {  }
 
-  let (:pipe) { pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator)
+  let (:pipe) { pipe = Pipetree::Railway.new.extend(Pipetree::Railway::Operator)
     pipe.& ->(value, options) { value && options["deserializer.result"] = JSON.parse(value) }
     pipe.& ->(value, options) { options["deserializer.result"]["key"] == 1 ? true : (options["contract.errors"]=false) }
     pipe.& ->(value, options) { options["deserializer.result"]["key2"] == 2 ? true : (options["contract.errors.2"]="screwd";false) }
@@ -84,21 +84,21 @@ class FlowTest < Minitest::Spec
   #---
   # return value is new input.
   it do
-    pipe = Pipetree::Flow.new [
-      Pipetree::Flow::On.new(Pipetree::Flow::Right, ->(last, value, options) { [Pipetree::Flow::Right, value.reverse] } )
+    pipe = Pipetree::Railway.new [
+      Pipetree::Railway::On.new(Pipetree::Railway::Right, ->(last, value, options) { [Pipetree::Railway::Right, value.reverse] } )
     ]
-    pipe.("Hello", {}).must_equal [Pipetree::Flow::Right, "olleH"]
+    pipe.("Hello", {}).must_equal [Pipetree::Railway::Right, "olleH"]
   end
 
   #---
   # #>
   describe "#>" do
-    let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator) }
+    let (:pipe) { Pipetree::Railway.new.extend(Pipetree::Railway::Operator) }
     it {
       pipe.> ->(input, options) { input.reverse }
       # pipe.| B
       # pipe.% A
-      pipe.("Hallo", {}).must_equal [Pipetree::Flow::Right, "Hallo"]
+      pipe.("Hallo", {}).must_equal [Pipetree::Railway::Right, "Hallo"]
      }
   end
 
@@ -109,7 +109,7 @@ class FlowTest < Minitest::Spec
   Callable  = Object.new # random callable object.
 
   describe "#inspect" do
-    let (:pipe) { Pipetree::Flow.new.extend(Pipetree::Flow::Operator).&(Aaa, name: "Aaa").<(B, name: "B").<(Seventeen, name: "Seventeen").>(Long, name: "Long").>(Callable, name: "Callable") }
+    let (:pipe) { Pipetree::Railway.new.extend(Pipetree::Railway::Operator).&(Aaa, name: "Aaa").<(B, name: "B").<(Seventeen, name: "Seventeen").>(Long, name: "Long").>(Callable, name: "Callable") }
 
     it { pipe.inspect.must_equal %{[>Aaa,<B,<Seventeen,>Long,>Callable]} }
 
@@ -124,7 +124,7 @@ class FlowTest < Minitest::Spec
   #---
   # with aliases
   it do
-    pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator).
+    pipe = Pipetree::Railway.new.extend(Pipetree::Railway::Operator).
       >(Aaa, name: "pipe.aaa").
       >(B, name: "pipe.b").
       >(Aaa, name: "pipe.aaa.aaa")
@@ -141,13 +141,13 @@ class FlowTest < Minitest::Spec
   #---
   # test decompose array
   it do
-    pipe = Pipetree::Flow.new.extend(Pipetree::Flow::Operator).
+    pipe = Pipetree::Railway.new.extend(Pipetree::Railway::Operator).
       &( ->((value, input), options) { input["x"] = value } ) # decomposes input.
 
     options={key: 1}
     input = {}
 
-    pipe.([options[:key], input], options).must_equal [Pipetree::Flow::Right, [1, {"x"=>1}]]
+    pipe.([options[:key], input], options).must_equal [Pipetree::Railway::Right, [1, {"x"=>1}]]
     input.inspect.must_equal %{{"x"=>1}}
     options.inspect.must_equal %{{:key=>1}}
   end

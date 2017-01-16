@@ -1,13 +1,13 @@
 require "pipetree/inspect"
 
-module Pipetree::Flow::Inspect
+module Pipetree::Railway::Inspect
   include ::Pipetree::Inspect
 
   def inspect_func(step)
     @inspect[step]
   end
 
-  Operator = { Pipetree::Flow::Left => "<", Pipetree::Flow::Right => ">", }
+  Operator = { Pipetree::Railway::Left => "<", Pipetree::Railway::Right => ">", }
 
   def inspect_line(names)
     string = names.collect { |i, (track, name)| "#{Operator[track]}#{name}" }.join(",")

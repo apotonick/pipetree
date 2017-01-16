@@ -1,6 +1,6 @@
 # Optimize the most common steps with Stay/And objects that are faster than procs.
 # This is experimental API and might be removed/changed without prior warning.
-class Pipetree::Flow
+class Pipetree::Railway
   module Operator
     def <(proc, options={})
       _insert On.new(Left, Stay.new(proc)), options, Left, proc#, "<"
