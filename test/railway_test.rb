@@ -153,4 +153,31 @@ class RailwayTest < Minitest::Spec
   end
 end
 
-# TODO: instead of testing #index, test all options like :before, etc.
+class NestedPipeTest < Minitest::Spec
+  R = Pipetree::Railway
+
+  it do
+    nested_pipe = Pipetree::Railway.new.extend(Pipetree::Railway::Operator)
+      .&( ->(input, options) { options["extract"] = true } )
+      .&( ->(input, options) { options["validate"] = options[:success] } )
+
+      # This is basically what Nested() does.
+    pipe = R.new.add(R::Right,
+        R::On.new( R::Right, ->(last, input, options) {
+
+          signal, input = nested_pipe.(input, options)
+
+          [signal, input] } )
+      )
+
+
+    options = { success: true }
+    pipe.(Object, options).must_equal [Pipetree::Railway::Right, Object]
+
+    options.inspect.must_equal %{{:success=>true, \"extract\"=>true, \"validate\"=>true}}
+
+
+    pipe.(Object, options = { success: false }).must_equal [Pipetree::Railway::Left, Object]
+    options.inspect.must_equal %{{:success=>false, \"extract\"=>true, \"validate\"=>false}}
+  end
+end

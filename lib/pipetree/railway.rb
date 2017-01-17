@@ -22,7 +22,7 @@ class Pipetree
 
     # Naming:
     # * Track
-    # * Tie: the callable that's usually an On instance and is sitting directly in the pipe.
+    # * Tie: the callable that's usually an On instance and is sitting directly in the pipe, on a Track.
     # * Strut: the callable that's wrapped by the Tie and implements the decider logic (e.g. And).
     # * Step: the user callable with interface `Step.(input, options)`.
     module Add
