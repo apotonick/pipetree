@@ -3,15 +3,27 @@
 class Pipetree::Railway
   module Operator
     def <(proc, options={})
-      _insert On.new(Left, Stay.new(proc)), options, Left, proc#, "<"
+      _insert(Pipetree::Railway.<(proc), options, Left, proc)
     end
 
     def &(proc, options={})
-      _insert On.new(Right, And.new(proc)), options, Right, proc#, "&"
+      _insert(Pipetree::Railway.&(proc), options, Right, proc)
     end
 
     def >(proc, options={})
-      _insert On.new(Right, Stay.new(proc)), options, Right, proc#, ">"
+      _insert(Pipetree::Railway.>(proc), options, Right, proc)
     end
+  end
+
+  def self.<(proc)
+    On.new(Left, Stay.new(proc))
+  end
+
+  def self.&(proc)
+    On.new(Right, And.new(proc))
+  end
+
+  def self.>(proc)
+    On.new(Right, Stay.new(proc))
   end
 end

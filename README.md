@@ -16,6 +16,12 @@ Instead of implementing the perfect API where users can override methods, call `
 
 This is way less tedious than climbing through `super` calls and callstacks.
 
+##
+
+[ tie, tie, tie ]
+  On.new(track, strut)
+    Right.new( step )
+
 ## Installation
 
 In your `Gemfile`.

@@ -9,8 +9,6 @@ class Pipetree
       @inspect = Hash.new
     end
 
-    # TODO: don't inherit from Array, because we don't want Array[].
-
     # Actual implementation of Pipetree:Railway. Yes, it's that simple!
     def call(input, options)
       input = [Right, input]
@@ -45,7 +43,7 @@ class Pipetree
         Insert.(self, insert_operation, old_tie, tie)
 
         @index[options[:name]] = tie
-        @inspect[tie] = [ track, options[:name] ]
+        @inspect[tie]          = [ track, options[:name] ]
 
         self
       end
