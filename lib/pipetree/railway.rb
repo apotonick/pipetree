@@ -28,10 +28,9 @@ class Pipetree
         _insert On.new(track, strut), options, track, strut
       end
 
-      require "uber/delegates"
-      extend Uber::Delegates
+      extend Forwardable
       # TODO: make Insert properly decoupled! it still relies on Array interface on pipe`.
-      delegates :@steps, :<<, :each_with_index, :[]=, :delete_at, :insert, :unshift, :index
+      def_delegators :@steps, :<<, :each_with_index, :[]=, :delete_at, :insert, :unshift, :index
 
     private
       def _insert(tie, options, track, strut)
