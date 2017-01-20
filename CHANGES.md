@@ -1,3 +1,7 @@
+# 0.1.1
+
+* Remove `uber` gem dependency as we don't need it here.
+
 # 0.1.0
 
 * Rename `Flow` to `Railway`.
